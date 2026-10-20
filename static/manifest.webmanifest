@@ -1,0 +1,18 @@
+{
+  "name": "镜间 · 光影之艺影棚管理系统",
+  "short_name": "镜间",
+  "description": "摄影棚与人员排期、预约登记与状态查看。",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f7fb",
+  "theme_color": "#7160d4",
+  "icons": [
+    { "src": "/static/icons/icon-192.png?v=warm-light", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-512.png?v=warm-light", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-maskable-512.png?v=warm-light-2", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/static/icons/icon-maskable-1024.png?v=warm-light-2", "sizes": "1024x1024", "type": "image/png", "purpose": "maskable" },
+    { "src": "/static/favicon.svg?v=warm-light", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

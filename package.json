@@ -1,0 +1,15 @@
+{
+  "name": "make-a-reservation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "镜间 · 光影之艺影棚管理系统（原生 Node，零运行时依赖）",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "lan": "node --disable-warning=ExperimentalWarning server.js --host 0.0.0.0 --open",
+    "check": "node --check server.js && node --check storage.js && node --check validation.js"
+  }
+}

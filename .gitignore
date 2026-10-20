@@ -1,0 +1,5 @@
+.DS_Store
+/data/
+*.initial-password.txt
+.env*
+/node_modules/
