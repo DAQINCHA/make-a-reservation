@@ -10,6 +10,6 @@
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server.js",
     "lan": "node --disable-warning=ExperimentalWarning server.js --host 0.0.0.0 --open",
-    "check": "node --check server.js && node --check storage.js && node --check validation.js"
+    "check": "node --check server.js && node --check lib/storage.js && node --check lib/validation.js"
   }
 }

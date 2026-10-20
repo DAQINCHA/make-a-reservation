@@ -27,7 +27,7 @@ node server.js --db /路径/studio.sqlite   # 指定数据库
 与 Python 版**同一个库文件**，Schema、表结构、密码哈希（PBKDF2-SHA256，十万次迭代）、会话令牌哈希完全一致，
 可以直接把 Python 版的 `data/studio.sqlite` 放到本目录 `data/` 下继续使用，也可以把本目录的库带回 Python 版。
 
-启动时 `storage.js` 会做一次幂等的兼容升级，和 Python 版行为相同：
+启动时 `lib/storage.js` 会做一次幂等的兼容升级，和 Python 版行为相同：
 
 - 建表（`IF NOT EXISTS`），不覆盖已有数据；
 - 旧库缺 `must_change_password` 列时补一列，**不改动任何已有密码，也不给任何账号打标记**；
@@ -42,10 +42,11 @@ node server.js --db /路径/studio.sqlite   # 指定数据库
 make-a-reservation/
 ├── 启动镜间.command          # macOS 双击启动
 ├── package.json             # 只有 scripts，无依赖
-├── server.js                # HTTP、静态资源、会话与五组 API
-├── storage.js               # SQLite、PBKDF2-SHA256、初始化与兼容升级
-├── validation.js            # 服务端字段、权限、预约与图片头校验
-├── static/                  # 前端，与 Python 版逐字节一致
+├── server.js                # 入口：HTTP、静态资源、会话与五组 API
+├── lib/
+│   ├── storage.js           # SQLite、PBKDF2-SHA256、初始化与兼容升级
+│   └── validation.js        # 服务端字段、权限、预约与图片头校验
+├── public/                  # 前端，映射到站点根 /
 │   ├── index.html
 │   ├── app.js               # DOM、事件、表格/卡片与原生 dialog
 │   ├── domain.js            # 北京时间、按天预约、排序与图片信息
@@ -59,7 +60,7 @@ make-a-reservation/
     └── studio.initial-password.txt  # 首次启动生成，改密成功后自动删除
 ```
 
-`data/` 含账号哈希与业务资料，已在 `.gitignore` 中排除。HTTP 只提供 `static/` 的文件和指定 API；
+`data/` 含账号哈希与业务资料，已在 `.gitignore` 中排除。HTTP 只提供 `public/` 的文件和指定 API；
 不会公开数据库、源代码或库文件。
 
 ## 首次启动
@@ -85,8 +86,9 @@ make-a-reservation/
 ## 自测
 
 ```sh
-npm run check    # 三个文件的语法检查
+npm run check    # server.js 与 lib/ 两个文件的语法检查
 ```
 
-前端逻辑回归测试仍在 Python 目录的 `tests/` 下（`test_domain.mjs`、`test_frontend.mjs`），
-它们导入的是同一份 `static/` 代码，两边逐字节一致，改动前端后在那里跑一次即可。
+前端逻辑回归测试在 Python 目录的 `tests/` 下（`test_domain.mjs`、`test_frontend.mjs`）。
+注意：Node 版的前端已搬到 `public/` 并按站点根路径引用资源，与 Python 版的 `static/`（仍用 `/static/` 前缀）
+不再是逐字节一致；改完 `domain.js` 等纯逻辑文件后，仍需把改动同步到 Python 版才能跑那两份测试。

@@ -239,7 +239,7 @@
    Shared normalized mask approximates the iOS continuous app-icon silhouette. */
 :root{--brand-radius:22.5%}
 @supports (mask-image:url("")) or (-webkit-mask-image:url("")){
-.brand-mark{border-radius:0;-webkit-mask:url('/static/icons/brand-mask.svg') center/100% 100% no-repeat;mask:url('/static/icons/brand-mask.svg') center/100% 100% no-repeat}
+.brand-mark{border-radius:0;-webkit-mask:url('/icons/brand-mask.svg') center/100% 100% no-repeat;mask:url('/icons/brand-mask.svg') center/100% 100% no-repeat}
 }
 .brand-image{display:block;width:39px;height:39px;flex-shrink:0}
 .login-panel>.brand-image{width:44px;height:44px;margin-bottom:20px}

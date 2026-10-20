@@ -9,8 +9,8 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { execFileSync, execFile } = require('node:child_process');
 
-const storage = require('./storage');
-const validation = require('./validation');
+const storage = require('./lib/storage');
+const validation = require('./lib/validation');
 
 const { ROOT, DEFAULT_DB, initialize, passwordHash, verifyPassword, tokenHash, initialPasswordPath } = storage;
 const { schema, validate, authorize, Invalid, imageInfo, MAX_AVATAR } = validation;
@@ -20,7 +20,7 @@ const CONFLICT = '工作区已在其他页面更新。请重新加载最新数�
 const BODY_CAP = 16 * 1024 * 1024;
 const WORKSPACE_LIMIT = 12 * 1000 * 1000;
 const LEGACY_CSS = new Set(['/static/tailwindcss', '/static/tw-animate-css', '/vendor/shadcn-tailwind-4.13.0.css']);
-const STATIC_DIR = path.join(ROOT, 'static');
+const PUBLIC_DIR = path.join(ROOT, 'public');
 const MIME = {
   '.html': 'text/html',
   '.js': 'text/javascript',
@@ -356,20 +356,16 @@ function serveStatic(pathname) {
   }
   let file;
   if (pathname === '/') {
-    file = path.join(STATIC_DIR, 'index.html');
-  } else if (pathname === '/favicon.svg') {
-    file = path.join(STATIC_DIR, 'favicon.svg');
-  } else if (pathname.startsWith('/static/')) {
+    file = path.join(PUBLIC_DIR, 'index.html');
+  } else {
     let decoded = pathname;
     try {
       decoded = decodeURIComponent(pathname);
     } catch (error) {
       decoded = pathname;
     }
-    file = path.resolve(ROOT, decoded.replace(/^\/+/, ''));
-    if (!file.startsWith(STATIC_DIR + path.sep)) fail(404, '文件不存在');
-  } else {
-    fail(404, '文件不存在');
+    file = path.resolve(PUBLIC_DIR, decoded.replace(/^\/+/, ''));
+    if (!file.startsWith(PUBLIC_DIR + path.sep)) fail(404, '文件不存在');
   }
   let stat;
   try {
