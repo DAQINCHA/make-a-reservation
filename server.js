@@ -8,6 +8,7 @@ const net = require('node:net');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { execFileSync, execFile } = require('node:child_process');
+const { DatabaseSync: BackupDatabase } = require('node:sqlite');
 
 const storage = require('./lib/storage');
 const validation = require('./lib/validation');
@@ -762,6 +763,24 @@ function openBrowser(url) {
   } catch (error) {}
 }
 
+
+/* 启动时备份数据库：data/backups/<名>-startup-<时间>.db，只保留最近 10 份 */
+function backupOnStartup(dbPath, keep = 10) {
+  if (!fs.existsSync(dbPath)) return null;
+  const dir = path.join(path.dirname(dbPath), "backups");
+  fs.mkdirSync(dir, { recursive: true });
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  const stamp = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  const base = path.basename(dbPath).replace(/\.[^.]+$/, "");
+  const target = path.join(dir, `${base}-startup-${stamp}.db`);
+  const db = new BackupDatabase(dbPath);
+  try { db.exec(`VACUUM INTO '${target.replace(/'/g, "''")}'`); } finally { db.close(); }
+  const old = fs.readdirSync(dir).filter((n) => n.startsWith(`${base}-startup-`) && n.endsWith(".db")).sort();
+  for (const n of old.slice(0, Math.max(0, old.length - keep))) fs.rmSync(path.join(dir, n), { force: true });
+  return target;
+}
+
 function main() {
   loadEnvFile(path.join(__dirname, ".env"));
   let options;
@@ -783,6 +802,8 @@ function main() {
     console.error(`无法打开数据库：${error.message}`);
     process.exit(1);
   }
+  let backupPath = null;
+  try { backupPath = backupOnStartup(dbPath); } catch (error) { console.warn(`  数据库备份失败：${error.message}`); }
   let boundPort = options.port;
   const server = http.createServer((request, response) => {
     const respond = (out) => {
@@ -818,6 +839,7 @@ function main() {
     }
     const dataPath = path.relative(ROOT, dbPath);
     lines.push(`  数据    ${dataPath.startsWith('..') ? dbPath : dataPath}`);
+    if (backupPath) { const b = path.relative(ROOT, backupPath); lines.push(`  备份    ${b.startsWith("..") ? backupPath : b}（保留最近 10 份）`); }
     const secret = initialPasswordPath(dbPath);
     if (fs.existsSync(secret)) {
       const secretPath = path.relative(ROOT, secret);
