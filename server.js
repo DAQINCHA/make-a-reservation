@@ -594,10 +594,9 @@ function avatarRoute(ctx, db) {
 }
 
 function route(ctx) {
-  if (!hostAllowed(ctx.host, ctx.port)) fail(403, '请求来源无效');
   if (ctx.method !== 'GET' && ctx.method !== 'HEAD') {
     const origin = ctx.headers.origin;
-    if (origin && origin !== 'http://' + ctx.host) fail(403, '请求来源无效');
+    if (origin && !originAllowed(origin, ctx.headers)) fail(403, '请求来源无效');
     if (ctx.headers['sec-fetch-site'] === 'cross-site') fail(403, '请求来源无效');
   }
   if (!ctx.pathname.startsWith('/api/')) {
@@ -662,6 +661,33 @@ function localHost(name) {
     return cleaned.startsWith('fc') || cleaned.startsWith('fd') || /^fe[89ab]/.test(cleaned);
   }
   return cleaned.endsWith('.local') || cleaned === os.hostname().toLowerCase();
+}
+
+function loadEnvFile(file) {
+  let text;
+  try { text = fs.readFileSync(file, "utf8"); } catch (error) { return; }
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) continue;
+    const index = line.indexOf("=");
+    if (index <= 0) continue;
+    const key = line.slice(0, index).trim();
+    let value = line.slice(index + 1).trim();
+    if (/^(['"]).*\1$/.test(value)) value = value.slice(1, -1);
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
+}
+
+function originAllowed(origin, headers) {
+  const list = (process.env.RESERVATION_ALLOWED_ORIGINS || "").split(",").map((item) => item.trim()).filter(Boolean);
+  if (list.includes(origin)) return true;
+  const hostName = (value) => String(value || "").split(",")[0].trim().toLowerCase().replace(/:\d+$/, "");
+  let originName = "";
+  try { originName = new URL(origin).hostname.toLowerCase(); } catch (error) {}
+  const candidates = [headers.host, headers["x-forwarded-host"]].map(hostName).filter(Boolean);
+  if (originName && candidates.includes(originName)) return true;
+  console.warn(`  拒绝来源 ${origin}（Host: ${headers.host || "-"}，X-Forwarded-Host: ${headers["x-forwarded-host"] || "-"}）`);
+  return false;
 }
 
 function hostAllowed(header, port) {
@@ -737,6 +763,7 @@ function openBrowser(url) {
 }
 
 function main() {
+  loadEnvFile(path.join(__dirname, ".env"));
   let options;
   try {
     options = parseArgs(process.argv.slice(2));
@@ -784,7 +811,8 @@ function main() {
     const port = server.address().port;
     boundPort = port;
     const url = `http://127.0.0.1:${port}`;
-    const lines = ['', '  镜间 · 光影之艺影棚管理', '  ─────────────────────────────────────────', `  本机    http://127.0.0.1:${port}`];
+    const bar = '='.repeat(60);
+    const lines = [bar, '   镜间 · 光影之艺影棚管理系统  MAKE A RESERVATION', bar, '', `  Node:    ${process.execPath}`, '', `  本机    http://127.0.0.1:${port}`];
     if (!['127.0.0.1', 'localhost', '::1'].includes(options.host)) {
       for (const lan of lanAddresses().slice(0, 2)) lines.push(`  局域网  http://${lan}:${port}`);
     }
