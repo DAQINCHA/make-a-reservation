@@ -43,6 +43,11 @@ dialog.touch-sheet::backdrop{background:rgba(20,18,32,.38)}
 .touch-cal-day[data-active=true]{background:var(--primary);color:var(--primary-foreground);font-weight:600}
 .touch-cal-blank{height:44px}
 .touch-cal-day[disabled]{color:var(--muted-foreground);background:var(--muted);text-decoration:line-through;cursor:not-allowed;opacity:.6}
+/* 桌面也统一使用项目自带日期选择：所有宽度隐藏原生日期框，只让预约表单的日期字段显示为可点选择框 */
+.form-field>input[type=date]{display:none}
+.form-field>.touch-select.touch-date{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:48px;padding:0 12px;border:1px solid var(--input);border-radius:var(--radius-unified);background:var(--secondary);color:var(--foreground);font-size:15px;text-align:left}
+.form-field>.touch-select.touch-date .touch-select-value{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.form-field>.touch-select.touch-date .is-placeholder{color:var(--muted-foreground)}
 /* 摄影间卡片整张可点：屏蔽或排序时恢复默认光标，避免误以为可预约。 */
 .space-card{cursor:pointer}.space-card.is-blocked,.space-card:has(.card-order){cursor:default}
 .home-hero{display:grid;place-items:center;min-height:280px;padding:52px 24px 24px;text-align:center}
