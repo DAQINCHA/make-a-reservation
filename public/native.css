@@ -42,6 +42,9 @@ dialog.touch-sheet::backdrop{background:rgba(20,18,32,.38)}
 .touch-cal-day[data-today=true]{box-shadow:inset 0 0 0 1px var(--ring)}
 .touch-cal-day[data-active=true]{background:var(--primary);color:var(--primary-foreground);font-weight:600}
 .touch-cal-blank{height:44px}
+.touch-cal-day[disabled]{color:var(--muted-foreground);background:var(--muted);text-decoration:line-through;cursor:not-allowed;opacity:.6}
+/* 摄影间卡片整张可点：屏蔽或排序时恢复默认光标，避免误以为可预约。 */
+.space-card{cursor:pointer}.space-card.is-blocked,.space-card:has(.card-order){cursor:default}
 .home-hero{display:grid;place-items:center;min-height:280px;padding:52px 24px 24px;text-align:center}
 .home-cta{width:154px;height:154px;min-height:0;padding:0;border-radius:50%;flex-direction:column;gap:10px;background:var(--primary);color:var(--primary-foreground);font-size:18px;font-weight:600;line-height:1.15;box-shadow:0 16px 36px rgba(113,96,212,.28)}
 .home-cta svg{width:29px;height:29px}
