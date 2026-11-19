@@ -91,7 +91,7 @@ html.glass .appearance-popover{background:rgba(252,252,255,.86);border-color:rgb
 html.glass.dark .appearance-popover{background:rgba(22,24,32,.9);border-color:rgba(255,255,255,.1);box-shadow:0 20px 44px rgba(0,0,0,.55)}
 
 /* ---------- 弹窗与提示 ---------- */
-html.glass dialog.touch-sheet{background:rgba(252,252,255,.9);border:1px solid rgba(255,255,255,.7);box-shadow:0 -18px 48px rgba(20,16,45,.3);backdrop-filter:blur(34px) saturate(190%);-webkit-backdrop-filter:blur(34px) saturate(190%)}
+html.glass dialog.touch-sheet{background:rgba(252,252,255,.9);border:1px solid rgba(255,255,255,.7);box-shadow:0 18px 48px rgba(20,16,45,.3);backdrop-filter:blur(34px) saturate(190%);-webkit-backdrop-filter:blur(34px) saturate(190%)}
 html.glass.dark dialog.touch-sheet{background:rgba(22,24,32,.92);border-color:rgba(255,255,255,.1)}
 html.glass dialog.touch-sheet::backdrop{background:rgba(20,18,32,.32);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
 
