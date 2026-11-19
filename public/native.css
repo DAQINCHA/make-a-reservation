@@ -32,7 +32,7 @@ dialog.touch-sheet[open]{display:grid;gap:10px;animation:touch-sheet-in .26s cub
 dialog.touch-sheet::backdrop{background:rgba(20,18,32,.38)}
 @keyframes touch-sheet-in{from{transform:translateY(100%)}to{transform:translateY(0)}}
 @media(min-width:768px){
-  dialog.touch-sheet{left:auto;right:24px;bottom:24px;width:380px;max-width:calc(100vw - 48px);max-height:min(80dvh,560px);border:1px solid var(--border);box-shadow:0 18px 48px rgba(20,16,45,.22)}
+  dialog.touch-sheet{left:0;right:0;bottom:24px;margin:0 auto;width:380px;max-width:calc(100vw - 48px);max-height:min(80dvh,560px);border:1px solid var(--border);box-shadow:0 18px 48px rgba(20,16,45,.22)}
 }
 .touch-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .touch-sheet-head strong{font-size:16px;font-weight:600}
