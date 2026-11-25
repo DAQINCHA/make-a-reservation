@@ -15,6 +15,12 @@ export const timeText=d=>dateInput(d).slice(11,16);
 export const dateText=d=>{const s=dateInput(d);return s.slice(5,7)+'月'+s.slice(8,10)+'日';};
 export const endDay=b=>dayKey(Date.parse(b.end)-1);
 export const allDay=b=>timeText(b.start)==='00:00'&&timeText(b.end)==='00:00';
+export const addDays=(iso,n)=>dayKey(Date.parse(iso+'T00:00+08:00')+n*86400000);
+export const diffDays=(a,b)=>Math.round((Date.parse(b+'T00:00+08:00')-Date.parse(a+'T00:00+08:00'))/86400000);
+export const weekdayOf=iso=>new Date(Date.parse(iso+'T00:00+08:00')+8*3600000).getUTCDay();
+export const shortDay=iso=>{const[,m,d]=String(iso).slice(0,10).split('-');return `${Number(m)}月${Number(d)}日`;};
+export function bookingOnDay(bookings,roomId,iso,excludeId=''){return bookings.find(b=>b.roomId===roomId&&b.id!==excludeId&&dayKey(b.start)<=iso&&endDay(b)>=iso)||null;}
+export function rangeConflicts(bookings,roomId,start,end,excludeId=''){const out=[];if(!roomId||!start||!end||start>end)return out;const total=diffDays(start,end);for(let i=0;i<=total;i++){const day=addDays(start,i),booking=bookingOnDay(bookings,roomId,day,excludeId);if(booking)out.push({day,booking});}return out;}
 export const range=(start,end,previous)=>({start:previous&&start===dayKey(previous.start)?previous.start:new Date(start+'T00:00+08:00').toISOString(),end:previous&&end===endDay(previous)?previous.end:new Date(Date.parse(end+'T00:00+08:00')+86400000).toISOString()});
 export const bookingStatus=(b,now=Date.now())=>Date.parse(b.start)>now?'待开始':Date.parse(b.end)>now?'使用中':'已结束';
 export function roomInfo(room,data,now=Date.now()){const list=data.bookings.filter(b=>b.roomId===room.id);return {active:list.find(b=>Date.parse(b.start)<=now&&now<Date.parse(b.end)),recent:list.filter(b=>Date.parse(b.start)<=now).sort((a,b)=>Date.parse(b.start)-Date.parse(a.start))[0],next:list.filter(b=>Date.parse(b.start)>now).sort((a,b)=>Date.parse(a.start)-Date.parse(b.start))[0]};}
