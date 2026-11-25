@@ -462,6 +462,15 @@ function homeView() {
   return `<div class="home-hero">${button('new-booking', `${icon('calendar-plus', 24)}<strong>我要预约</strong>`, 'home-cta', '', !state.revision || state.saving ? 'disabled' : '')}</div>${timelineView(state.data.bookings)}`;
 }
 
+function shortRoomName(name) {
+  const text = String(name || '').trim();
+  const compact = text
+    .replace(/^豪华/, '')
+    .replace(/(?:摄影棚|摄影间|摄影房|实景间|实景棚|房|棚|间)/g, '')
+    .replace(/[\s·\-—]+/g, '');
+  return compact || text;
+}
+
 /* ==================== 排期灯箱时间轴 ==================== */
 function timelineView(rows) {
   const d = state.data;
@@ -512,12 +521,10 @@ function timelineView(rows) {
       return `<div class="tl-cell ${weekend ? 'is-weekend' : ''} ${iso === today ? 'is-today' : ''}" data-tl-room="${esc(r.id)}" data-tl-day="${iso}"></div>`;
     }).join('');
 
-    const stateCls = r.blocked ? 'tl-state-blocked' : live ? 'tl-state-live' : 'tl-state-free';
-    const stateText = r.blocked ? '不可预约' : live ? '使用中' : '可预约';
     return `<div class="tl-row">
       <div class="tl-room-cell ${esc(r.color)}">
-        <div class="tl-room-name" title="${esc(r.name)}">${esc(r.name)}</div>
-        <div class="tl-room-sub">${r.code ? `<span>${esc(r.code)}</span>` : ''}<span class="${stateCls}">${stateText}</span></div>
+        <div class="tl-room-name" title="${esc(r.name)}"><span class="tl-room-full">${esc(r.name)}</span><span class="tl-room-short">${esc(shortRoomName(r.name))}</span></div>
+        ${r.code ? `<div class="tl-room-sub"><span>${esc(r.code)}</span></div>` : ''}
       </div>
       <div class="tl-lane ${r.blocked ? 'is-blocked' : ''}" data-lane-room="${esc(r.id)}" data-days="${state.tlDays}">
         ${cellsHtml}
