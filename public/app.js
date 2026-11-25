@@ -49,7 +49,7 @@ const ib = (action, name, label, title = label) =>
 
 const viewTitle = (entity, view) =>
   entity === 'bookings'
-    ? (view === 'timeline' ? '排期时间轴' : view === 'cards' ? '预约统计' : '预约明细')
+    ? (view === 'cards' ? '预约统计' : '预约明细')
     : (view === 'cards' ? '卡片视图' : '表格视图');
 
 const state = {
@@ -65,12 +65,12 @@ const state = {
   revision: 0,
   entity: 'bookings',
   home: true,
-  views: { bookings: 'timeline', rooms: 'cards', people: 'cards' },
+  views: { bookings: 'cards', rooms: 'cards', people: 'cards' },
   filter: 'all',
   filterPerson: '',
   search: '',
-  tlStart: addDays(dayKey(Date.now()), -2),
-  tlDays: 14,
+  tlStart: addDays(dayKey(Date.now()), matchMedia('(max-width: 767px)').matches ? 0 : -2),
+  tlDays: matchMedia('(max-width: 767px)').matches ? 7 : 14,
   selected: [],
   sort: null,
   sorting: false,
@@ -457,109 +457,9 @@ function bookingPersonCard({ person: p, active, total }, index) {
   }</span><div><h2>${esc(p.name)}</h2><p>${esc(p.team || '未分组')}</p></div></div><div class="booking-person-stats"><div><span>正在预约</span><strong>${active}</strong><small>条</small></div><div><span>累计预约</span><strong>${total}</strong><small>条</small></div></div></article>`;
 }
 
-/* ==================== 首页：今日片场总控台 ==================== */
+/* ==================== 首页：预约入口 + 排期时间轴 ==================== */
 function homeView() {
-  const d = state.data;
-  const today = dayKey(Date.now());
-  const next7 = Array.from({ length: 7 }, (_, i) => addDays(today, i));
-  const openRooms = d.rooms.filter((r) => !r.blocked);
-
-  const sortedRooms = openRooms.slice().sort((a, b) => {
-    const aLive = roomInfo(a, d).active ? 1 : 0;
-    const bLive = roomInfo(b, d).active ? 1 : 0;
-    return bLive - aLive;
-  });
-
-  const onsetHtml = sortedRooms.length
-    ? sortedRooms.map((r) => {
-        const info = roomInfo(r, d);
-        const active = info.active;
-        const next = info.next;
-        if (active) {
-          const p = person(active.personId);
-          const end = endDay(active);
-          const left = diffDays(today, end);
-          const countdown = left <= 0 ? '今日结束' : `余 ${left} 天`;
-          return `<div class="onset-item is-live ${esc(r.color)}">
-            <div>
-              <div class="onset-top">
-                ${r.code ? `<span class="onset-code">${esc(r.code)}</span>` : ''}
-                <span class="onset-room">${esc(r.name)}</span>
-                ${status('使用中')}
-              </div>
-              <div class="onset-title">${esc(active.name)}</div>
-              <div class="onset-meta">
-                ${personName(p)}
-                <span>${shortDay(dayKey(active.start))}${dayKey(active.start) !== end ? ' – ' + shortDay(end) : ''}</span>
-              </div>
-              ${next ? `<div class="onset-next">下一场：${shortDay(dayKey(next.start))} · ${esc(person(next.personId)?.name || '—')}</div>` : ''}
-            </div>
-            <div class="onset-right">
-              <span class="onset-countdown">${countdown}</span>
-              ${canEdit(active, 'bookings') ? button('edit-booking:' + active.id, '编辑', 'secondary-button compact') : ''}
-            </div>
-          </div>`;
-        }
-        return `<div class="onset-item ${esc(r.color)}">
-          <div>
-            <div class="onset-top">
-              ${r.code ? `<span class="onset-code">${esc(r.code)}</span>` : ''}
-              <span class="onset-room">${esc(r.name)}</span>
-              ${status('可预约')}
-            </div>
-            <div class="onset-meta">
-              ${r.area ? `<span>${esc(r.area)} ㎡</span>` : ''}
-              ${r.location ? `<span>${esc(r.location)}</span>` : ''}
-              ${next ? `<span>下一场：${shortDay(dayKey(next.start))} · ${esc(person(next.personId)?.name || '—')}</span>` : ''}
-            </div>
-          </div>
-          <div class="onset-right">
-            ${button(`book-day:${r.id}:${today}`, '预约', 'secondary-button compact', '', !state.revision || state.saving ? 'disabled' : '')}
-          </div>
-        </div>`;
-      }).join('')
-    : '<div class="home-empty">暂无可用摄影间</div>';
-
-  const radarRows = d.rooms.length
-    ? d.rooms.map((r) => {
-        const cells = next7.map((iso) => {
-          if (r.blocked) {
-            return `<td class="radar-cell"><span class="radar-slot is-blocked" title="已屏蔽">—</span></td>`;
-          }
-          const hit = bookingOnDay(d.bookings, r.id, iso);
-          if (hit) {
-            const p = person(hit.personId);
-            const initial = p?.name?.slice(0, 1) || '•';
-            return `<td class="radar-cell"><button type="button" class="radar-slot is-busy ${esc(r.color)}" data-action="inspect-booking:${esc(hit.id)}" title="${shortDay(iso)} · ${esc(hit.name)} · ${esc(p?.name || '')}">${esc(initial)}</button></td>`;
-          }
-          return `<td class="radar-cell"><button type="button" class="radar-slot is-free" data-action="book-day:${esc(r.id)}:${iso}" title="${esc(r.name)} · ${shortDay(iso)}" ${!state.revision || state.saving ? 'disabled' : ''}>+</button></td>`;
-        }).join('');
-        return `<tr><td class="radar-room" title="${esc(r.name)}">${esc(r.name)}${r.code ? `<small>${esc(r.code)}</small>` : ''}</td>${cells}</tr>`;
-      }).join('')
-    : '';
-
-  return `<div class="home-hero">${button('new-booking', `${icon('calendar-plus', 24)}<strong>我要预约</strong>`, 'home-cta', '', !state.revision || state.saving ? 'disabled' : '')}</div>
-  <div class="home-dashboard">
-    <section class="home-panel">
-      <div class="home-panel-head">
-        <h2><span class="onset-dot"></span>今日动态</h2>
-        ${button('go-timeline', '排期时间轴', 'secondary-button compact', 'gantt-chart')}
-      </div>
-      <div class="home-panel-body">
-        <div class="onset-list">${onsetHtml}</div>
-      </div>
-    </section>
-    <section class="home-panel">
-      <div class="home-panel-head">
-        <h2>未来 7 天</h2>
-      </div>
-      <div class="home-panel-body">
-        ${d.rooms.length
-          ? `<div class="radar-wrap"><table class="radar-table"><thead><tr><th>摄影间</th>${next7.map((iso, i) => `<th class="${i === 0 ? 'is-today' : ''}">${i === 0 ? '今日' : '周' + WEEKDAYS[weekdayOf(iso)]}<br>${Number(iso.slice(8))}</th>`).join('')}</tr></thead><tbody>${radarRows}</tbody></table></div>`
-          : '<div class="home-empty">暂无摄影间</div>'}
-      </div>
-    </section>
-  </div>`;
+  return `<div class="home-hero">${button('new-booking', `${icon('calendar-plus', 24)}<strong>我要预约</strong>`, 'home-cta', '', !state.revision || state.saving ? 'disabled' : '')}</div>${timelineView(state.data.bookings)}`;
 }
 
 /* ==================== 排期灯箱时间轴 ==================== */
@@ -636,12 +536,13 @@ function timelineView(rows) {
         <span class="tl-range">${shortDay(state.tlStart)} – ${shortDay(endIso)}</span>
       </div>
       <div class="tl-zoom">
+        <button type="button" data-action="tl-zoom:7" data-active="${state.tlDays === 7}">7天</button>
         <button type="button" data-action="tl-zoom:14" data-active="${state.tlDays === 14}">14天</button>
         <button type="button" data-action="tl-zoom:21" data-active="${state.tlDays === 21}">21天</button>
       </div>
     </div>
     <div class="tl-scroll" id="tl-scroll">
-      <div class="tl-grid">
+      <div class="tl-grid" data-days="${state.tlDays}">
         <div class="tl-row tl-header">
           <div class="tl-corner">摄影间</div>
           <div class="tl-days-head" data-days="${state.tlDays}">
@@ -688,7 +589,6 @@ function render() {
   const { all, rows } = records();
   const view = state.views[e];
   const cards = view === 'cards';
-  const timeline = e === 'bookings' && view === 'timeline';
   const title = state.home ? '主页' : titles[e];
   const bookingCards = cards && e === 'bookings' ? bookingPeople(rows, all) : [];
 
@@ -699,22 +599,16 @@ function render() {
   const me = person(state.user.personId);
 
   const metric = [
-    ['全部预约', d.bookings.length, '条', 'calendar-days', 'bookings', 'all', 'timeline'],
+    ['全部预约', d.bookings.length, '条', 'calendar-days', 'bookings', 'all', 'table'],
     ['我的预约', d.bookings.filter(ownBooking).length, '条', 'calendar-check', 'bookings', 'mine', 'table'],
     ['空闲摄影间', available, '间', 'door-open', 'rooms', '可预约', 'cards'],
     ['在忙摄影间', busy, '间', 'aperture', 'rooms', '使用中', 'cards'],
   ];
 
-  const bookingTabs = [
-    ['timeline', 'gantt-chart'],
-    ['table', 'table-2'],
-    ['cards', 'trophy'],
-  ];
-  const standardTabs = [
-    ['cards', 'layout-grid'],
+  const tabDefs = [
+    ['cards', e === 'bookings' ? 'trophy' : 'layout-grid'],
     ['table', 'table-2'],
   ];
-  const tabDefs = e === 'bookings' ? bookingTabs : standardTabs;
   const filterPersonObj = state.filterPerson ? person(state.filterPerson) : null;
 
   app.innerHTML = `<div data-slot="sidebar-wrapper">
@@ -797,7 +691,7 @@ function render() {
 
         ${state.home
           ? homeView()
-          : `<section class="records-panel ${cards || timeline ? 'cards-panel' : ''} ${e === 'bookings' && cards ? 'booking-stats-panel' : ''}">
+          : `<section class="records-panel ${cards ? 'cards-panel' : ''} ${e === 'bookings' && cards ? 'booking-stats-panel' : ''}">
               <div class="panel-top">
                 <div>
                   <div role="tablist" class="view-tabs">
@@ -807,14 +701,14 @@ function render() {
                   </div>
                 </div>
                 <div class="panel-actions">
-                  ${admin() && !(e === 'bookings' && (cards || timeline))
+                  ${admin() && !(e === 'bookings' && cards)
                     ? button('sorting', state.sorting ? '完成排序' : '调整顺序', 'secondary-button compact', 'arrow-up-down', `aria-pressed="${state.sorting}" ${state.saving || d[e].length < 2 ? 'disabled' : ''}`)
                     : ''}
                   ${admin() && e === 'bookings' && view === 'table' && d.bookingOrder === 'manual'
                     ? button('auto', '恢复自动排序', 'secondary-button compact', '', 'title="恢复按结束时间自动排序"')
                     : ''}
                   <span class="record-count">${e === 'bookings' && cards ? bookingCards.length + ' 位' : all.length + ' 条'}</span>
-                  ${admin() && !timeline ? button('fields', '字段设置', 'secondary-button compact', 'sliders-horizontal', !state.revision || state.saving ? 'disabled' : '') : ''}
+                  ${admin() ? button('fields', '字段设置', 'secondary-button compact', 'sliders-horizontal', !state.revision || state.saving ? 'disabled' : '') : ''}
                 </div>
               </div>
 
@@ -849,20 +743,18 @@ function render() {
 
               ${state.loading
                 ? `<div class="empty-state">${icon('refresh-cw')}<h3>正在连接</h3></div>`
-                : timeline
-                  ? timelineView(rows)
-                  : !rows.length
-                    ? emptyState()
-                    : !cards
-                      ? table(rows)
-                      : e === 'rooms'
-                        ? `<div class="room-grid">${rows.map(roomCard).join('')}</div>`
-                        : e === 'bookings'
-                          ? `<div class="people-grid booking-people-grid">${bookingCards.map(bookingPersonCard).join('')}</div>`
-                          : `<div class="people-grid">${rows.map(personCard).join('')}</div>`}
+                : !rows.length
+                  ? emptyState()
+                  : !cards
+                    ? table(rows)
+                    : e === 'rooms'
+                      ? `<div class="room-grid">${rows.map(roomCard).join('')}</div>`
+                      : e === 'bookings'
+                        ? `<div class="people-grid booking-people-grid">${bookingCards.map(bookingPersonCard).join('')}</div>`
+                        : `<div class="people-grid">${rows.map(personCard).join('')}</div>`}
 
               <div class="table-footer">
-                <span>${e === 'bookings' && cards ? `共 ${bookingCards.length} 位` : timeline ? `共 ${rows.length} 条预约` : `共 ${rows.length} 条`}</span>
+                <span>${e === 'bookings' && cards ? `共 ${bookingCards.length} 位` : `共 ${rows.length} 条`}</span>
                 <span>${icon('clock-3', 14)}北京时间</span>
               </div>
             </section>`}
@@ -1689,7 +1581,7 @@ function openCommandPalette() {
     const today = dayKey(Date.now());
     const items = [
       { label: '新建预约', sub: '操作', act: 'new-booking' },
-      { label: '排期时间轴', sub: '预约记录', act: 'go-timeline' },
+      { label: '排期时间轴', sub: '主页', act: 'nav:home' },
       { label: '暗房外观', sub: '皮肤', act: 'skin:darkroom' },
       ...state.data.rooms.map((r) => ({
         label: `${r.code ? r.code + ' ' : ''}${r.name}`,
@@ -1850,7 +1742,7 @@ async function runAction(rawAction, triggerEl = null) {
         render();
         break;
       case 'tl-today':
-        state.tlStart = addDays(dayKey(Date.now()), -2);
+        state.tlStart = addDays(dayKey(Date.now()), state.tlDays <= 7 ? 0 : -2);
         render();
         break;
       case 'tl-zoom':
@@ -2177,6 +2069,21 @@ document.addEventListener('click', (event) => {
     return;
   }
 
+  // Touch tap on timeline bar or empty cell (keeps native horizontal swipe scrolling intact)
+  if (lastPointerType === 'touch' && !state.saving && onTimeline()) {
+    const barEl = event.target.closest('.tl-bar[data-tl-booking]');
+    if (barEl) {
+      runAction('inspect-booking:' + barEl.dataset.tlBooking);
+      return;
+    }
+    const cell = event.target.closest('.tl-cell[data-tl-room]');
+    if (cell && canCreate('bookings')) {
+      const r = room(cell.dataset.tlRoom);
+      if (r && !r.blocked) editRecord('bookings', null, null, r.id, cell.dataset.tlDay, cell.dataset.tlDay);
+      return;
+    }
+  }
+
   if (appearanceOpen && !event.target.closest('.appearance-control')) {
     appearanceOpen = false;
     refreshAppearance();
@@ -2221,6 +2128,8 @@ app.addEventListener('dblclick', (event) => {
 
 /* ==================== 时间轴拖拽直约 / 改期 / 拉伸延展 ==================== */
 let tlDrag = null;
+let lastPointerType = 'mouse';
+const onTimeline = () => state.home;
 const dragPill = document.querySelector('#drag-pill');
 
 function showDragPill(x, y, text, isError = false) {
@@ -2259,7 +2168,8 @@ function updateTlCreateHighlight(cx, cy) {
 }
 
 app.addEventListener('pointerdown', (event) => {
-  if (event.button !== 0 || state.home || state.entity !== 'bookings' || state.views.bookings !== 'timeline' || state.saving) return;
+  lastPointerType = event.pointerType || 'mouse';
+  if (event.pointerType === 'touch' || event.button !== 0 || !onTimeline() || state.saving) return;
 
   const resizeEl = event.target.closest('[data-tl-resize]');
   if (resizeEl) {
