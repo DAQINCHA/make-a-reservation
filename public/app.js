@@ -85,6 +85,7 @@ const state = {
 };
 
 const admin = () => state.user?.role === 'admin';
+const isMobile = () => matchMedia('(max-width: 767px)').matches;
 const ownBooking = (r) => !!r && r.personId === state.user.personId;
 const canCreate = (e = state.entity) => admin() || e === 'bookings';
 const canEdit = (r, e = state.entity) =>
@@ -421,7 +422,7 @@ function bookingSummary(bookings) {
   const counts = { 待开始: 0, 使用中: 0, 已结束: 0 };
   const now = Date.now();
   for (const booking of bookings) counts[bookingStatus(booking, now)]++;
-  return `<div class="section-summary"><span><b>${bookings.length}</b> 条预约</span><i></i><span>${counts['待开始']} 条待开始</span><span class="amber-text">${counts['使用中']} 条使用中</span><span>${counts['已结束']} 条已结束</span></div>`;
+  return `<div class="section-summary"><span><b>${bookings.length}</b> 条预约</span><i></i><span>${counts['待开始']} 条待开始</span><span class="amber-text">${counts['使用中']} 条使用中</span><span>${counts['已结束']} 条已结束</span>${admin() ? button('new', '新建预约', 'primary-button summary-create', 'plus', !state.revision || state.saving ? 'disabled' : '') : ''}</div>`;
 }
 
 function bookingPeople(rows, bookings) {
@@ -443,7 +444,8 @@ function bookingPeople(rows, bookings) {
 function bookingPersonCard({ person: p, active, total }, index) {
   const medal = ['🥇', '🥈', '🥉'][index];
   const rank = index + 1;
-  return `<article class="person-card booking-person-card is-clickable ${esc(p.color)}" data-action="drill-person:${esc(p.id)}">${
+  const drill = !isMobile();
+  return `<article class="person-card booking-person-card ${drill ? 'is-clickable' : ''} ${esc(p.color)}" ${drill ? `data-action="drill-person:${esc(p.id)}"` : ''}>${
     medal ? `<span class="booking-rank-medal" role="img" aria-label="第 ${rank} 名">${medal}</span>` : ''
   }<div class="person-accent ${esc(p.color)}"></div><div class="booking-person-head"><span class="booking-person-avatar">${avatar(p, true)}${
     rank === 1 ? '<span class="booking-avatar-crown" aria-hidden="true">👑</span>' : ''
@@ -587,7 +589,7 @@ function render() {
   const e = state.entity;
   const d = state.data;
   const { all, rows } = records();
-  const view = state.views[e];
+  const view = isMobile() ? 'cards' : state.views[e];
   const cards = view === 'cards';
   const title = state.home ? '主页' : titles[e];
   const bookingCards = cards && e === 'bookings' ? bookingPeople(rows, all) : [];
@@ -663,15 +665,6 @@ function render() {
       </header>
 
       <div class="page-content">
-        <div class="page-heading ${state.home || !canCreate() ? 'no-mobile-action' : ''}">
-          <div><h1>${title}</h1></div>
-          ${state.home
-            ? ''
-            : canCreate()
-              ? button('new', '新建' + singular[e], 'primary-button', 'plus', !state.revision || state.saving ? 'disabled' : '')
-              : ''}
-        </div>
-
         ${state.home
           ? `<div class="stats-grid">${metric.map(([label, value, unit, i, target, filter, v]) =>
               `<button type="button" class="stat-card" data-action="stat:${target}:${encodeURIComponent(filter)}:${v}">
@@ -685,7 +678,7 @@ function render() {
                 e === 'rooms'
                   ? `<span><b>${d.rooms.length}</b> 个摄影空间</span><i></i><span class="green-text">${available} 间可预约</span><span class="amber-text">${busy} 间使用中</span>${blocked ? `<span>${blocked} 间不可预约</span>` : ''}`
                   : `<span><b>${d.people.length}</b> 位人员</span><i></i><span>${teams.length} 个团队</span>`
-              }</div>`}
+              }${admin() ? button('new', '新建' + singular[e], 'primary-button summary-create', 'plus', !state.revision || state.saving ? 'disabled' : '') : ''}</div>`}
 
         ${errorMessage ? `<div class="error-banner" role="alert">${icon('circle-alert', 18)}<span>${esc(errorMessage)}</span>${button('reload', '重新加载', '')}</div>` : ''}
 
@@ -883,7 +876,7 @@ function roomCard(r) {
   const active = info.active;
   const whole = active && allDay(active);
   const end = active ? (whole ? endDay(active) : dayKey(active.end)) : '';
-  return `<article class="space-card ${esc(r.color)} ${esc(r.color)}-space ${r.blocked ? 'is-blocked' : ''}" data-card-id="${esc(r.id)}"><div class="space-accent ${esc(r.color)}"></div>${orderControls(r)}<div class="space-card-head"><span class="space-code">${esc(r.code || '未编号')}</span><div>${status(roomStatus(r, state.data))}${admin() ? ib('copy:' + r.id, 'copy', '以' + r.name + '为模板新建', '以此为模板新建') + ib('edit:' + r.id, 'pencil', '编辑' + r.name) : ''}</div></div><div class="space-name"><div class="space-icon ${esc(r.color)}">${icon('aperture', 29)}</div><div><h2>${esc(r.name)}</h2><span>${esc(r.kind || '摄影空间')}</span></div></div><div class="space-details"><span>${icon('maximize', 13)}${esc(r.area ? r.area + ' ㎡' : '—')}</span><span>${icon('map-pin', 13)}${esc(r.location || '—')}</span></div>${r.equipment ? `<p class="space-equipment">${esc(r.equipment)}</p>` : ''}${r.note ? `<p class="space-note">${esc(r.note)}</p>` : ''}<div class="space-session"><div class="recent-person"><span>${active ? '正在使用' : '最近使用'}</span>${recent ? personName(recent) : '<strong>尚未使用</strong>'}</div><div class="session-time"><span>${active ? '本场结束' : '最近拍摄'}</span><strong>${active ? (whole ? (end === dayKey(Date.now()) ? '今天结束' : dateText(end) + '结束') : (end !== dayKey(Date.now()) ? dateText(end) + ' ' : '') + timeText(active.end)) : info.recent ? dateText(info.recent.start) : '—'}</strong></div></div><div class="next-booking">${icon('clock-3', 14)}<span>${info.next ? `下一场 · ${dateText(info.next.start)}${allDay(info.next) ? '' : ' ' + timeText(info.next.start)} · ${esc(person(info.next.personId)?.name)}` : '暂无后续预约'}</span></div>${customDetails(r, 'rooms')}<div class="space-footer">${button('book:' + r.id, (r.blocked ? '不可预约' : '预约空间') + icon('arrow-up-right', 15), 'text-button', '', r.blocked || state.saving ? 'disabled' : '')}${admin() ? button('block:' + r.id, `<span>${r.blocked ? '解除屏蔽' : '屏蔽'}</span>`, 'room-block-button', r.blocked ? 'shield-check' : 'ban', `aria-label="${r.blocked ? '解除屏蔽' : '屏蔽'}${esc(r.name)}"`) + ib('delete:' + r.id, 'trash-2', '删除' + r.name) : ''}</div></article>`;
+  return `<article class="space-card ${esc(r.color)} ${esc(r.color)}-space ${r.blocked ? 'is-blocked' : ''}" data-card-id="${esc(r.id)}"><div class="space-accent ${esc(r.color)}"></div>${orderControls(r)}<div class="space-card-head"><span class="space-code">${esc(r.code || '未编号')}</span><div>${status(roomStatus(r, state.data))}${admin() ? ib('copy:' + r.id, 'copy', '以' + r.name + '为模板新建', '以此为模板新建') + ib('edit:' + r.id, 'pencil', '编辑' + r.name) : ''}</div></div><div class="space-name"><div class="space-icon ${esc(r.color)}">${icon('aperture', 29)}</div><div><h2>${esc(r.name)}</h2><span>${esc(r.kind || '摄影空间')}</span></div></div><div class="space-details"><span>${icon('maximize', 13)}${esc(r.area ? r.area + ' ㎡' : '—')}</span><span>${icon('map-pin', 13)}${esc(r.location || '—')}</span></div>${r.equipment ? `<p class="space-equipment">${esc(r.equipment)}</p>` : ''}${r.note ? `<p class="space-note">${esc(r.note)}</p>` : ''}<div class="space-session"><div class="recent-person"><span>${active ? '正在使用' : '最近使用'}</span>${recent ? personName(recent) : '<strong>尚未使用</strong>'}</div><div class="session-time"><span>${active ? '本场结束' : '最近拍摄'}</span><strong>${active ? (whole ? (end === dayKey(Date.now()) ? '今天结束' : dateText(end) + '结束') : (end !== dayKey(Date.now()) ? dateText(end) + ' ' : '') + timeText(active.end)) : info.recent ? dateText(info.recent.start) : '—'}</strong></div></div><div class="next-booking">${icon('clock-3', 14)}<span>${info.next ? `下一场 · ${dateText(info.next.start)}${allDay(info.next) ? '' : ' ' + timeText(info.next.start)} · ${esc(person(info.next.personId)?.name)}` : '暂无后续预约'}</span></div>${customDetails(r, 'rooms')}<div class="space-footer">${button('book:' + r.id, (r.blocked ? '不可预约' : '点击预约') + icon('arrow-up-right', 15), 'text-button', '', r.blocked || state.saving ? 'disabled' : '')}${admin() ? button('block:' + r.id, `<span>${r.blocked ? '解除屏蔽' : '屏蔽'}</span>`, 'room-block-button', r.blocked ? 'shield-check' : 'ban', `aria-label="${r.blocked ? '解除屏蔽' : '屏蔽'}${esc(r.name)}"`) + ib('delete:' + r.id, 'trash-2', '删除' + r.name) : ''}</div></article>`;
 }
 
 function personCard(p) {
@@ -1727,6 +1720,7 @@ async function runAction(rawAction, triggerEl = null) {
         render();
         break;
       case 'drill-person':
+        if (isMobile()) break;
         state.home = false;
         state.entity = 'bookings';
         state.views.bookings = 'table';
@@ -2420,6 +2414,7 @@ setInterval(() => { if (canAutoRefresh()) render(); }, 15000);
 setInterval(() => { if (canAutoRefresh()) load(true); }, 30000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && canAutoRefresh()) load(true); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { applyTheme(); if (state.user) render(); });
+matchMedia('(max-width: 767px)').addEventListener('change', () => { if (state.user) render(); });
 applyTheme();
 
 async function start() {
