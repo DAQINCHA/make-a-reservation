@@ -467,7 +467,7 @@ function shortRoomName(name) {
 
 /* ==================== 排期灯箱时间轴 ==================== */
 const TL_PAST = 30;
-const TL_FUTURE = 60;
+const TL_FUTURE = 30;
 const TL_TOTAL = TL_PAST + 1 + TL_FUTURE;
 
 function timelineBounds() {
