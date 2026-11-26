@@ -69,8 +69,7 @@ const state = {
   filter: 'all',
   filterPerson: '',
   search: '',
-  tlStart: addDays(dayKey(Date.now()), matchMedia('(max-width: 767px)').matches ? 0 : -2),
-  tlDays: 21,
+  tlScrollLeft: null,
   selected: [],
   sort: null,
   sorting: false,
@@ -467,53 +466,128 @@ function shortRoomName(name) {
 }
 
 /* ==================== 排期灯箱时间轴 ==================== */
+const TL_PAST = 30;
+const TL_FUTURE = 60;
+const TL_TOTAL = TL_PAST + 1 + TL_FUTURE;
+
+function timelineBounds() {
+  const today = dayKey(Date.now());
+  return {
+    today,
+    start: addDays(today, -TL_PAST),
+    end: addDays(today, TL_FUTURE),
+    total: TL_TOTAL,
+    todayIdx: TL_PAST,
+  };
+}
+
+function getTimelineMetrics(scrollEl) {
+  const lane = scrollEl?.querySelector('.tl-lane');
+  const corner = scrollEl?.querySelector('.tl-corner');
+  const roomW = corner?.offsetWidth || (isMobile() ? 74 : 180);
+  const dayW = lane?.offsetWidth ? lane.offsetWidth / TL_TOTAL : (isMobile() ? 44 : 58);
+  return { roomW, dayW };
+}
+
+function timelineFocusScroll(dayW) {
+  const focusIdx = TL_PAST - (isMobile() ? 0 : 2);
+  return Math.max(0, Math.round(focusIdx * dayW));
+}
+
+function syncTimelineViewport(scrollEl) {
+  if (!scrollEl) return;
+  const { roomW, dayW } = getTimelineMetrics(scrollEl);
+  const bounds = timelineBounds();
+  const viewportW = Math.max(dayW, scrollEl.clientWidth - roomW);
+  const startIdx = Math.max(0, Math.min(TL_TOTAL - 1, Math.round(scrollEl.scrollLeft / dayW)));
+  const visibleDays = Math.max(1, Math.round(viewportW / dayW));
+  const endIdx = Math.max(startIdx, Math.min(TL_TOTAL - 1, startIdx + visibleDays - 1));
+  const rangeEl = document.getElementById('tl-range');
+  if (rangeEl) {
+    const startIso = addDays(bounds.start, startIdx);
+    const endIso = addDays(bounds.start, endIdx);
+    rangeEl.textContent = `${shortDay(startIso)} – ${shortDay(endIso)}`;
+  }
+  const maxScroll = Math.max(0, scrollEl.scrollWidth - scrollEl.clientWidth);
+  const prevBtn = document.querySelector('[data-action="tl-shift:-7"]');
+  const nextBtn = document.querySelector('[data-action="tl-shift:7"]');
+  if (prevBtn) prevBtn.disabled = scrollEl.scrollLeft <= 2;
+  if (nextBtn) nextBtn.disabled = scrollEl.scrollLeft >= maxScroll - 2;
+}
+
+function bindTimelineScroll(scrollEl) {
+  if (!scrollEl) return;
+  const { dayW } = getTimelineMetrics(scrollEl);
+  const maxScroll = Math.max(0, scrollEl.scrollWidth - scrollEl.clientWidth);
+  const initial = state.tlScrollLeft === null ? timelineFocusScroll(dayW) : state.tlScrollLeft;
+  const clamped = Math.max(0, Math.min(maxScroll, initial));
+  scrollEl.scrollLeft = clamped;
+  state.tlScrollLeft = clamped;
+  syncTimelineViewport(scrollEl);
+
+  let raf = 0;
+  scrollEl.addEventListener(
+    'scroll',
+    () => {
+      state.tlScrollLeft = scrollEl.scrollLeft;
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        syncTimelineViewport(scrollEl);
+      });
+    },
+    { passive: true },
+  );
+}
+
 function timelineView(rows) {
   const d = state.data;
-  const today = dayKey(Date.now());
-  const days = Array.from({ length: state.tlDays }, (_, i) => addDays(state.tlStart, i));
-  const endIso = days[days.length - 1];
-  const todayIdx = days.indexOf(today);
+  const { today, start: tlStart, end: endIso, total: tlDays, todayIdx } = timelineBounds();
+  const days = Array.from({ length: tlDays }, (_, i) => addDays(tlStart, i));
 
   if (!d.rooms.length) {
     return `<div class="empty-state">${icon('door-open')}<h3>还没有摄影间</h3>${admin() ? button('nav:rooms', '前往影棚状态', 'secondary-button') : ''}</div>`;
   }
 
   const lanesHtml = d.rooms.map((r) => {
-    const info = roomInfo(r, d);
-    const live = !r.blocked && !!info.active;
-    const laneBookings = rows.filter((b) => b.roomId === r.id && endDay(b) >= state.tlStart && dayKey(b.start) <= endIso);
+    const laneBookings = rows.filter((b) => b.roomId === r.id && endDay(b) >= tlStart && dayKey(b.start) <= endIso);
     const barsHtml = laneBookings.map((b) => {
       const p = person(b.personId);
       const bStart = dayKey(b.start);
       const bEnd = endDay(b);
-      const clampedStart = bStart < state.tlStart ? state.tlStart : bStart;
-      const clampedEnd = bEnd > endIso ? endIso : bEnd;
-      const leftIdx = diffDays(state.tlStart, clampedStart);
+      const clippedLeft = bStart < tlStart;
+      const clippedRight = bEnd > endIso;
+      const clampedStart = clippedLeft ? tlStart : bStart;
+      const clampedEnd = clippedRight ? endIso : bEnd;
+      const leftIdx = diffDays(tlStart, clampedStart);
       const span = diffDays(clampedStart, clampedEnd) + 1;
       const totalDays = diffDays(bStart, bEnd) + 1;
-      const leftPct = ((leftIdx / state.tlDays) * 100).toFixed(4);
-      const widthPct = ((span / state.tlDays) * 100).toFixed(4);
+      const leftPct = ((leftIdx / tlDays) * 100).toFixed(4);
+      const widthPct = ((span / tlDays) * 100).toFixed(4);
       const isLive = bookingStatus(b) === '使用中';
       const editable = canEdit(b, 'bookings') && !r.blocked;
-      return `<div class="tl-bar ${esc(r.color)} ${isLive ? 'is-live' : ''} ${editable ? 'is-draggable' : ''}"
+      return `<div class="tl-bar ${esc(r.color)} ${isLive ? 'is-live' : ''} ${editable ? 'is-draggable' : ''} ${clippedLeft ? 'is-clipped-left' : ''} ${clippedRight ? 'is-clipped-right' : ''}"
         data-tl-booking="${esc(b.id)}"
         data-editable="${editable}"
         data-left="${leftPct}"
         data-width="${widthPct}"
         title="${esc(b.name)} · ${esc(p?.name || '')} · ${shortDay(bStart)}${bStart !== bEnd ? '–' + shortDay(bEnd) : ''}">
-        ${avatar(p)}
-        <div class="tl-bar-info">
-          <div class="tl-bar-title">${esc(b.name)}</div>
-          <div class="tl-bar-meta">${esc(p?.name || '—')} · ${totalDays}天</div>
+        <div class="tl-bar-content">
+          ${avatar(p)}
+          <div class="tl-bar-info">
+            <div class="tl-bar-title">${esc(b.name)}</div>
+            <div class="tl-bar-meta">${esc(p?.name || '—')} · ${totalDays}天</div>
+          </div>
         </div>
         ${editable ? `<div class="tl-resize-handle" data-tl-resize="${esc(b.id)}"></div>` : ''}
       </div>`;
     }).join('');
 
-    const cellsHtml = days.map((iso) => {
+    const cellsHtml = days.map((iso, i) => {
       const wd = weekdayOf(iso);
       const weekend = wd === 0 || wd === 6;
-      return `<div class="tl-cell ${weekend ? 'is-weekend' : ''} ${iso === today ? 'is-today' : ''}" data-tl-room="${esc(r.id)}" data-tl-day="${iso}"></div>`;
+      const monthStart = i > 0 && iso.endsWith('-01');
+      return `<div class="tl-cell ${weekend ? 'is-weekend' : ''} ${iso === today ? 'is-today' : ''} ${monthStart ? 'is-month-start' : ''}" data-tl-room="${esc(r.id)}" data-tl-day="${iso}"></div>`;
     }).join('');
 
     return `<div class="tl-row">
@@ -521,32 +595,36 @@ function timelineView(rows) {
         <div class="tl-room-name" title="${esc(r.name)}"><span class="tl-room-full">${esc(r.name)}</span><span class="tl-room-short">${esc(shortRoomName(r.name))}</span></div>
         ${r.code ? `<div class="tl-room-sub"><span>${esc(r.code)}</span></div>` : ''}
       </div>
-      <div class="tl-lane ${r.blocked ? 'is-blocked' : ''}" data-lane-room="${esc(r.id)}" data-days="${state.tlDays}">
+      <div class="tl-lane ${r.blocked ? 'is-blocked' : ''}" data-lane-room="${esc(r.id)}" data-days="${tlDays}">
         ${cellsHtml}
-        ${todayIdx >= 0 ? `<div class="tl-today-line" data-left="${(((todayIdx + 0.5) / state.tlDays) * 100).toFixed(4)}"></div>` : ''}
+        ${todayIdx >= 0 ? `<div class="tl-today-line" data-left="${(((todayIdx + 0.5) / tlDays) * 100).toFixed(4)}"></div>` : ''}
         <div class="tl-bars-layer">${barsHtml}</div>
       </div>
     </div>`;
   }).join('');
 
+  const initStart = addDays(today, isMobile() ? 0 : -2);
+  const initEnd = addDays(initStart, isMobile() ? 6 : 19);
+
   return `<div class="tl-panel">
     <div class="tl-toolbar">
       <div class="tl-nav">
-        ${button('tl-shift:-7', '', 'secondary-button compact', 'chevron-left', 'aria-label="上一周" title="上一周"')}
+        ${button('tl-shift:-7', '', 'secondary-button compact', 'chevron-left', 'aria-label="上一周" title="向左滑动一周"')}
         ${button('tl-today', '今日', 'secondary-button compact')}
-        ${button('tl-shift:7', '', 'secondary-button compact', 'chevron-right', 'aria-label="下一周" title="下一周"')}
-        <span class="tl-range">${shortDay(state.tlStart)} – ${shortDay(endIso)}</span>
+        ${button('tl-shift:7', '', 'secondary-button compact', 'chevron-right', 'aria-label="下一周" title="向右滑动一周"')}
+        <span class="tl-range" id="tl-range">${shortDay(initStart)} – ${shortDay(initEnd)}</span>
       </div>
     </div>
     <div class="tl-scroll" id="tl-scroll">
-      <div class="tl-grid" data-days="${state.tlDays}">
+      <div class="tl-grid" data-days="${tlDays}">
         <div class="tl-row tl-header">
           <div class="tl-corner">摄影间</div>
-          <div class="tl-days-head" data-days="${state.tlDays}">
-            ${days.map((iso) => {
+          <div class="tl-days-head" data-days="${tlDays}">
+            ${days.map((iso, i) => {
               const wd = weekdayOf(iso);
               const weekend = wd === 0 || wd === 6;
-              return `<div class="tl-day-th ${weekend ? 'is-weekend' : ''} ${iso === today ? 'is-today' : ''}">
+              const monthStart = i > 0 && iso.endsWith('-01');
+              return `<div class="tl-day-th ${weekend ? 'is-weekend' : ''} ${iso === today ? 'is-today' : ''} ${monthStart ? 'is-month-start' : ''}">
                 <span>${iso === today ? '今日' : '周' + WEEKDAYS[wd]}</span>
                 <strong>${Number(iso.slice(5, 7))}/${Number(iso.slice(8))}</strong>
               </div>`;
@@ -577,7 +655,8 @@ function render() {
   if (!state.user) return login();
   if (state.user.mustChangePassword) return initialPasswordScreen();
 
-  const prevTlScroll = document.querySelector('#tl-scroll')?.scrollLeft || 0;
+  const existingTlScroll = document.querySelector('#tl-scroll');
+  if (existingTlScroll) state.tlScrollLeft = existingTlScroll.scrollLeft;
   const activeSearch = document.activeElement?.id === 'list-search' ? document.activeElement.selectionStart : null;
 
   const errorMessage = state.connectionError || state.error;
@@ -756,9 +835,7 @@ function render() {
 
   updateSaveStatus();
   applyTimelineStyles();
-
-  const nextTlScroll = document.querySelector('#tl-scroll');
-  if (nextTlScroll && prevTlScroll) nextTlScroll.scrollLeft = prevTlScroll;
+  bindTimelineScroll(document.querySelector('#tl-scroll'));
 
   const selectAll = document.querySelector('[data-select="all"]');
   if (selectAll) {
@@ -1722,14 +1799,28 @@ async function runAction(rawAction, triggerEl = null) {
         history.replaceState(null, '', '#bookings');
         render();
         break;
-      case 'tl-shift':
-        state.tlStart = addDays(state.tlStart, Number(id));
-        render();
+      case 'tl-shift': {
+        const scrollEl = document.querySelector('#tl-scroll');
+        if (scrollEl) {
+          const { dayW } = getTimelineMetrics(scrollEl);
+          const maxScroll = Math.max(0, scrollEl.scrollWidth - scrollEl.clientWidth);
+          const target = Math.max(0, Math.min(maxScroll, Math.round(scrollEl.scrollLeft + Number(id) * dayW)));
+          state.tlScrollLeft = target;
+          scrollEl.scrollTo({ left: target, behavior: 'smooth' });
+        }
         break;
-      case 'tl-today':
-        state.tlStart = addDays(dayKey(Date.now()), isMobile() ? 0 : -2);
-        render();
+      }
+      case 'tl-today': {
+        const scrollEl = document.querySelector('#tl-scroll');
+        if (scrollEl) {
+          const { dayW } = getTimelineMetrics(scrollEl);
+          const maxScroll = Math.max(0, scrollEl.scrollWidth - scrollEl.clientWidth);
+          const target = Math.max(0, Math.min(maxScroll, timelineFocusScroll(dayW)));
+          state.tlScrollLeft = target;
+          scrollEl.scrollTo({ left: target, behavior: 'smooth' });
+        }
         break;
+      }
       case 'sort':
         state.sort =
           state.sort?.key !== id
@@ -2212,7 +2303,7 @@ document.addEventListener('pointermove', (event) => {
     const dx = event.clientX - tlDrag.startX;
     if (!tlDrag.moved && Math.abs(dx) < 8) return;
     tlDrag.moved = true;
-    const dayW = tlDrag.lane.getBoundingClientRect().width / state.tlDays;
+    const dayW = tlDrag.lane.getBoundingClientRect().width / TL_TOTAL;
     const shift = Math.round(dx / dayW);
     tlDrag.deltaDays = shift;
     const ns = addDays(tlDrag.origStart, shift);
@@ -2230,7 +2321,7 @@ document.addEventListener('pointermove', (event) => {
     const dx = event.clientX - tlDrag.startX;
     if (!tlDrag.moved && Math.abs(dx) < 6) return;
     tlDrag.moved = true;
-    const dayW = tlDrag.lane.getBoundingClientRect().width / state.tlDays;
+    const dayW = tlDrag.lane.getBoundingClientRect().width / TL_TOTAL;
     const delta = Math.round(dx / dayW);
     let nextEnd = addDays(tlDrag.origEnd, delta);
     if (nextEnd < tlDrag.origStart) nextEnd = tlDrag.origStart;
@@ -2402,7 +2493,14 @@ setInterval(() => { if (canAutoRefresh()) render(); }, 15000);
 setInterval(() => { if (canAutoRefresh()) load(true); }, 30000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden && canAutoRefresh()) load(true); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { applyTheme(); if (state.user) render(); });
-matchMedia('(max-width: 767px)').addEventListener('change', () => { if (state.user) render(); });
+matchMedia('(max-width: 767px)').addEventListener('change', () => {
+  state.tlScrollLeft = null;
+  if (state.user) render();
+});
+window.addEventListener('resize', () => {
+  const scrollEl = document.querySelector('#tl-scroll');
+  if (scrollEl) syncTimelineViewport(scrollEl);
+});
 applyTheme();
 
 async function start() {

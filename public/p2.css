@@ -155,6 +155,8 @@ html:not(.glass) [data-slot=sidebar-menu] .nav-button {
 
 /* ==================== 排期灯箱时间轴 ==================== */
 .tl-panel {
+  --tl-room-w: 180px;
+  --tl-day-w: 58px;
   border: 1px solid var(--border);
   border-radius: var(--r-shell);
   background: var(--card);
@@ -207,17 +209,20 @@ html:not(.glass) [data-slot=sidebar-menu] .nav-button {
 
 .tl-scroll {
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
   position: relative;
   user-select: none;
   -webkit-user-select: none;
 }
-.tl-grid { min-width: 860px; }
-.tl-grid[data-days="7"] { min-width: 560px; }
-.tl-grid[data-days="21"] { min-width: 1180px; }
+.tl-grid {
+  width: max-content;
+  min-width: 100%;
+}
 .tl-row {
   display: grid;
-  grid-template-columns: 180px minmax(0, 1fr);
+  grid-template-columns: var(--tl-room-w) max-content;
   border-bottom: 1px solid var(--border);
 }
 .tl-row:last-child { border-bottom: 0; }
@@ -238,7 +243,7 @@ html:not(.glass) [data-slot=sidebar-menu] .nav-button {
 .tl-days-head,
 .tl-lane {
   display: grid;
-  grid-template-columns: repeat(var(--tl-days, 14), minmax(0, 1fr));
+  grid-template-columns: repeat(var(--tl-days, 91), var(--tl-day-w));
 }
 .tl-day-th {
   padding: 8px 3px;
@@ -257,6 +262,10 @@ html:not(.glass) [data-slot=sidebar-menu] .nav-button {
   color: var(--foreground);
 }
 .tl-day-th.is-weekend { background: rgba(128, 120, 160, .05); }
+.tl-day-th.is-month-start {
+  border-left: 1.5px solid color-mix(in srgb, var(--primary) 34%, var(--border));
+}
+.tl-day-th.is-month-start strong { color: var(--primary); }
 .tl-day-th.is-today {
   background: var(--tungsten-soft);
   color: var(--tungsten);
@@ -321,6 +330,9 @@ html:not(.glass) [data-slot=sidebar-menu] .nav-button {
 }
 .tl-cell:last-child { border-right: 0; }
 .tl-cell.is-weekend { background: rgba(128, 120, 160, .04); }
+.tl-cell.is-month-start {
+  border-left: 1.5px solid color-mix(in srgb, var(--primary) 26%, var(--border));
+}
 .tl-cell.is-today { background: rgba(245, 201, 130, .08); }
 .tl-cell:hover { background: var(--accent); }
 .tl-lane.is-blocked .tl-cell { cursor: not-allowed; }
@@ -358,17 +370,35 @@ html:not(.glass) [data-slot=sidebar-menu] .nav-button {
   top: 10px;
   height: 48px;
   border-radius: 10px;
-  padding: 0 12px 0 8px;
+  padding: 0;
   background: var(--label-bg);
   color: var(--label-fg);
   border: 1px solid color-mix(in srgb, var(--label-fg) 35%, transparent);
   box-shadow: 0 3px 10px rgba(20, 16, 40, .07);
   display: flex;
   align-items: center;
-  gap: 8px;
   cursor: pointer;
-  overflow: hidden;
+  overflow: clip;
   transition: box-shadow .14s, filter .14s;
+}
+.tl-bar.is-clipped-left {
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+.tl-bar.is-clipped-right {
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+.tl-bar-content {
+  position: sticky;
+  left: var(--tl-room-w, 180px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 0 8px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 .tl-bar.is-draggable { cursor: grab; }
 .tl-bar:hover {
@@ -386,8 +416,8 @@ html:not(.glass) [data-slot=sidebar-menu] .nav-button {
   z-index: 10;
   box-shadow: 0 14px 32px rgba(20, 16, 40, .24);
 }
-.tl-bar .avatar.small { width: 24px; height: 24px; font-size: 11px; }
-.tl-bar-info { min-width: 0; flex: 1; }
+.tl-bar .avatar.small { width: 24px; height: 24px; font-size: 11px; flex-shrink: 0; }
+.tl-bar-info { min-width: 0; flex: 0 1 auto; overflow: hidden; }
 .tl-bar-title {
   font-size: 12.5px;
   font-weight: 600;
@@ -852,12 +882,10 @@ dialog.cmd-dialog {
   .space-footer .room-block-button { font-size: 10.5px; padding: 3px 4px; gap: 3px; }
   .space-footer .icon-button { width: 24px; height: 24px; }
 
-  /* 手机端排期时间轴（21天，左列吸顶 + 缩写影棚名） */
+  /* 手机端排期时间轴（连续无缝横向滚动，左列吸顶 + 缩写影棚名） */
+  .tl-panel { --tl-room-w: 74px; --tl-day-w: 44px; }
   .tl-toolbar { padding: 10px 12px; gap: 8px; }
   .tl-range { font-size: 12.5px; min-width: 0; }
-  .tl-grid,
-  .tl-grid[data-days="21"] { min-width: 980px; }
-  .tl-row { grid-template-columns: 74px minmax(0, 1fr); }
   .tl-corner { padding: 8px 8px; font-size: 11px; }
   .tl-room-cell { padding: 8px 6px 8px 10px; gap: 2px; }
   .tl-room-name { font-size: 12.5px; }
@@ -867,7 +895,8 @@ dialog.cmd-dialog {
   .tl-day-th { padding: 6px 1px; font-size: 10px; }
   .tl-day-th strong { font-size: 11.5px; }
   .tl-lane { min-height: 54px; }
-  .tl-bar { top: 7px; height: 40px; padding: 0 6px; gap: 5px; border-radius: 8px; }
+  .tl-bar { top: 7px; height: 40px; border-radius: 8px; }
+  .tl-bar-content { padding: 0 6px; gap: 5px; }
   .tl-bar .avatar.small { width: 19px; height: 19px; font-size: 10px; }
   .tl-bar-title { font-size: 11.5px; }
   .tl-bar-meta { font-size: 10px; }
