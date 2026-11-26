@@ -205,26 +205,21 @@ function updateSaveStatus() {
     (offline ? '连接中断' : state.error ? '操作未完成' : state.saving ? '正在保存' : state.loading ? '正在连接' : '已保存');
 }
 
-/* ==================== 外观与皮肤（日/夜/自动 × 普通/毛玻璃/暗房） ==================== */
+/* ==================== 外观与皮肤（日/夜/自动 × 普通/毛玻璃） ==================== */
 function theme() { return document.documentElement.classList.contains('dark'); }
 function themeMode() { return localStorage.getItem('jingjian-theme') || 'system'; }
-function skinMode() {
-  const s = localStorage.getItem('jingjian-skin');
-  return s === 'solid' || s === 'darkroom' ? s : 'glass';
-}
+function skinMode() { return localStorage.getItem('jingjian-skin') === 'solid' ? 'solid' : 'glass'; }
 function applyTheme() {
   const mode = themeMode();
-  const skin = skinMode();
-  const darkroom = skin === 'darkroom';
-  const dark = darkroom || mode === 'dark' || (mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+  const dark = mode === 'dark' || (mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
   document.documentElement.classList.toggle('dark', dark);
-  document.documentElement.classList.toggle('glass', skin === 'glass');
-  document.documentElement.classList.toggle('darkroom', darkroom);
+  document.documentElement.classList.toggle('glass', skinMode() === 'glass');
+  document.documentElement.classList.remove('darkroom');
 }
 
 let appearanceOpen = false;
 const APPEARANCE_THEMES = [['light', '日间', 'sun'], ['dark', '夜间', 'moon'], ['system', '自动', 'monitor']];
-const APPEARANCE_SKINS = [['solid', '普通'], ['glass', '毛玻璃'], ['darkroom', '暗房']];
+const APPEARANCE_SKINS = [['solid', '普通'], ['glass', '毛玻璃']];
 
 function appearanceChoice(action, label, active, ico = '') {
   return `<button type="button" class="appearance-choice" data-action="${action}" data-active="${active}" role="menuitemradio" aria-checked="${active}">${ico ? icon(ico, 14) : ''}${label}</button>`;
@@ -233,14 +228,12 @@ function appearanceChoice(action, label, active, ico = '') {
 function appearanceControl() {
   const mode = themeMode();
   const skin = skinMode();
-  const skinLabel = skin === 'darkroom' ? '暗房' : skin === 'glass' ? '毛玻璃' : '普通';
-  const summaryLabel = skin === 'darkroom' ? '暗房' : `${theme() ? '夜间' : '日间'} · ${skinLabel}`;
   return `<div class="appearance-control" data-open="${appearanceOpen}">
     <button type="button" class="appearance-trigger" data-action="appearance" aria-haspopup="true" aria-expanded="${appearanceOpen}" aria-label="外观设置" title="外观设置">
-      ${icon(theme() ? 'moon' : 'sun', 15)}<span class="appearance-label">${summaryLabel}</span>${icon('chevron-down', 13)}
+      ${icon(theme() ? 'moon' : 'sun', 15)}<span class="appearance-label">${theme() ? '夜间' : '日间'} · ${skin === 'glass' ? '毛玻璃' : '普通'}</span>${icon('chevron-down', 13)}
     </button>
     <div class="appearance-popover" role="menu" aria-label="外观设置">
-      ${skin !== 'darkroom' ? `<div class="appearance-group"><span class="appearance-caption">明暗</span><div class="appearance-choices">${APPEARANCE_THEMES.map(([k, l, i]) => appearanceChoice('theme:' + k, l, mode === k, i)).join('')}</div></div>` : ''}
+      <div class="appearance-group"><span class="appearance-caption">明暗</span><div class="appearance-choices">${APPEARANCE_THEMES.map(([k, l, i]) => appearanceChoice('theme:' + k, l, mode === k, i)).join('')}</div></div>
       <div class="appearance-group"><span class="appearance-caption">外观</span><div class="appearance-choices">${APPEARANCE_SKINS.map(([k, l]) => appearanceChoice('skin:' + k, l, skin === k)).join('')}</div></div>
     </div>
   </div>`;
@@ -670,7 +663,7 @@ function render() {
       </header>
 
       <div class="page-content">
-        <div class="page-heading">
+        <div class="page-heading ${state.home || !canCreate() ? 'no-mobile-action' : ''}">
           <div><h1>${title}</h1></div>
           ${state.home
             ? ''
@@ -1589,7 +1582,6 @@ function openCommandPalette() {
     const items = [
       { label: '新建预约', sub: '操作', act: 'new-booking' },
       { label: '排期时间轴', sub: '主页', act: 'nav:home' },
-      { label: '暗房外观', sub: '皮肤', act: 'skin:darkroom' },
       ...state.data.rooms.map((r) => ({
         label: `${r.code ? r.code + ' ' : ''}${r.name}`,
         sub: [r.location, r.equipment].filter(Boolean).join(' · ') || '摄影间',

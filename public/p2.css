@@ -715,7 +715,10 @@ dialog.cmd-dialog {
 @media (max-width: 767px) {
   [data-slot=sidebar],
   .topbar [data-slot=sidebar-trigger],
-  .topbar .crumb-sep { display: none !important; }
+  .topbar .crumb-sep,
+  .page-heading h1,
+  .page-heading.no-mobile-action { display: none !important; }
+  .page-heading { justify-content: flex-end; margin-bottom: 12px; }
   .mobile-brand { display: block; width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0; }
   .mobile-user-control { display: block; }
   .home-hero { min-height: 178px; padding: 18px 16px 24px; }
@@ -786,7 +789,53 @@ dialog.cmd-dialog {
   }
 }
 
-/* ==================== 毛玻璃皮肤适配 P2 组件 ==================== */
+/* ==================== 毛玻璃皮肤：高透液态玻璃（顶栏 + 底部胶囊 + 面板） ==================== */
+html.glass .topbar {
+  position: sticky;
+  top: 10px;
+  z-index: 30;
+  border-color: rgba(255, 255, 255, .74);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .42), rgba(244, 246, 255, .20));
+  box-shadow: 0 12px 32px rgba(28, 24, 68, .12), 0 2px 6px rgba(28, 24, 68, .05), inset 0 1.5px 0 rgba(255, 255, 255, .94), inset 0 -1px 0 rgba(120, 110, 180, .14);
+  backdrop-filter: blur(20px) saturate(220%) brightness(1.03);
+  -webkit-backdrop-filter: blur(20px) saturate(220%) brightness(1.03);
+}
+html.glass.dark .topbar {
+  border-color: rgba(255, 255, 255, .18);
+  background: linear-gradient(180deg, rgba(38, 42, 60, .40), rgba(16, 18, 28, .28));
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .48), inset 0 1px 0 rgba(255, 255, 255, .20), inset 0 -1px 0 rgba(0, 0, 0, .35);
+  backdrop-filter: blur(20px) saturate(210%);
+  -webkit-backdrop-filter: blur(20px) saturate(210%);
+}
+@media (max-width: 767px) {
+  html.glass .topbar {
+    top: max(8px, env(safe-area-inset-top));
+  }
+}
+
+html.glass .mobile-dock {
+  border-color: rgba(255, 255, 255, .78);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .42), rgba(242, 244, 255, .18));
+  box-shadow: 0 18px 44px rgba(26, 22, 66, .18), 0 3px 10px rgba(26, 22, 66, .08), inset 0 1.5px 0 rgba(255, 255, 255, .96), inset 0 -1px 0 rgba(120, 110, 180, .16);
+  backdrop-filter: blur(20px) saturate(230%) brightness(1.04);
+  -webkit-backdrop-filter: blur(20px) saturate(230%) brightness(1.04);
+}
+html.glass .mobile-dock button[data-active=true] {
+  background: rgba(113, 96, 212, .16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .82), 0 2px 8px rgba(113, 96, 212, .12);
+}
+html.glass.dark .mobile-dock {
+  border-color: rgba(255, 255, 255, .20);
+  background: linear-gradient(180deg, rgba(40, 44, 64, .42), rgba(16, 18, 28, .30));
+  box-shadow: 0 20px 48px rgba(0, 0, 0, .58), inset 0 1.5px 0 rgba(255, 255, 255, .24), inset 0 -1px 0 rgba(0, 0, 0, .4);
+  backdrop-filter: blur(20px) saturate(220%);
+  -webkit-backdrop-filter: blur(20px) saturate(220%);
+}
+html.glass.dark .mobile-dock button[data-active=true] {
+  background: rgba(182, 164, 255, .22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+
 html.glass .tl-panel,
 html.glass .mobile-user-popover {
   border-color: rgba(255, 255, 255, .64);
@@ -795,17 +844,10 @@ html.glass .mobile-user-popover {
   backdrop-filter: blur(22px) saturate(180%);
   -webkit-backdrop-filter: blur(22px) saturate(180%);
 }
-html.glass .mobile-dock {
-  border-color: rgba(255, 255, 255, .82);
-  background: rgba(255, 255, 255, .68);
-  box-shadow: 0 20px 46px rgba(24, 20, 58, .20), 0 4px 12px rgba(24, 20, 58, .08), inset 0 1px 0 rgba(255, 255, 255, .95);
-  backdrop-filter: blur(28px) saturate(210%);
-  -webkit-backdrop-filter: blur(28px) saturate(210%);
-}
 html.glass .tl-room-cell { background: rgba(249, 249, 254, .92); }
 html.glass .tl-header,
 html.glass .tl-corner { background: rgba(244, 244, 252, .9); }
-html.glass .mobile-user-popover { background: rgba(252, 252, 255, .92); }
+html.glass .mobile-user-popover { background: rgba(252, 252, 255, .86); }
 
 html.glass.dark .tl-panel,
 html.glass.dark .mobile-user-popover {
@@ -813,121 +855,7 @@ html.glass.dark .mobile-user-popover {
   background: rgba(24, 26, 36, .58);
   box-shadow: 0 12px 30px rgba(0, 0, 0, .44), inset 0 1px 0 rgba(255, 255, 255, .06);
 }
-html.glass.dark .mobile-dock {
-  border-color: rgba(255, 255, 255, .16);
-  background: rgba(22, 24, 34, .74);
-  box-shadow: 0 22px 48px rgba(0, 0, 0, .58), inset 0 1px 0 rgba(255, 255, 255, .12);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
-}
 html.glass.dark .tl-room-cell { background: rgba(20, 22, 32, .94); }
 html.glass.dark .tl-header,
 html.glass.dark .tl-corner { background: rgba(26, 28, 38, .92); }
-html.glass.dark .mobile-user-popover { background: rgba(22, 24, 32, .94); }
-
-/* ==================== 第三套皮肤：暗房（Darkroom） ==================== */
-html.darkroom {
-  color-scheme: dark;
-  background: #0a0a0c;
-  --background: #0a0a0c;
-  --foreground: #f2ede4;
-  --card: #121216;
-  --card-foreground: #f2ede4;
-  --popover: #17171d;
-  --popover-foreground: #f2ede4;
-  --primary: #e5ae54;
-  --primary-foreground: #191208;
-  --secondary: #1b1b21;
-  --secondary-foreground: #dcd5c9;
-  --muted: #17171c;
-  --muted-foreground: #8f887d;
-  --accent: rgba(245, 201, 130, .14);
-  --accent-foreground: #f5c982;
-  --border: rgba(245, 201, 130, .13);
-  --input: rgba(245, 201, 130, .2);
-  --ring: #e5ae54;
-  --sidebar: #101014;
-  --sidebar-foreground: #aba397;
-  --sidebar-accent: rgba(245, 201, 130, .14);
-  --sidebar-accent-foreground: #f5c982;
-  --sidebar-border: rgba(245, 201, 130, .12);
-}
-html.darkroom body,
-html.darkroom .main-shell,
-html.darkroom .login-page { background: #0a0a0c; background-image: none; }
-html.darkroom [data-slot=sidebar-container] {
-  background: #111115;
-  background-image: none;
-  border-color: rgba(245, 201, 130, .14);
-  box-shadow: 0 18px 42px rgba(0, 0, 0, .55);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-html.darkroom .topbar {
-  background: #0e0e12;
-  border-color: rgba(245, 201, 130, .12);
-}
-html.darkroom .stat-card,
-html.darkroom .space-card,
-html.darkroom .person-card,
-html.darkroom .records-panel [data-slot=table-container],
-html.darkroom .tl-panel {
-  background: #121216;
-  background-image: none;
-  border-color: rgba(245, 201, 130, .13);
-  box-shadow: none;
-}
-html.darkroom .primary-button,
-html.darkroom .home-cta {
-  background: #e5ae54;
-  color: #191208;
-  border-color: #e5ae54;
-  font-weight: 600;
-}
-html.darkroom .home-cta {
-  box-shadow: 0 18px 40px rgba(229, 174, 84, .28), 0 0 0 8px rgba(245, 201, 130, .1);
-}
-html.darkroom .primary-button:hover,
-html.darkroom .home-cta:hover {
-  background: #f0be6a;
-  border-color: #f0be6a;
-}
-html.darkroom .home-cta:hover {
-  box-shadow: 0 22px 48px rgba(229, 174, 84, .36), 0 0 0 10px rgba(245, 201, 130, .14);
-}
-html.darkroom .nav-count {
-  background: rgba(245, 201, 130, .18);
-  color: #f5c982;
-}
-html.darkroom .view-tabs [data-state=active] { color: #f5c982 !important; }
-html.darkroom .view-tabs [data-state=active]:after { background: #e5ae54; }
-html.darkroom .status-filters button.active {
-  background: rgba(245, 201, 130, .15);
-  color: #f5c982;
-}
-html.darkroom .records-table th {
-  background: #17171c;
-  color: #a69e92;
-  border-color: rgba(245, 201, 130, .12);
-}
-html.darkroom .records-table td,
-html.darkroom .records-table tr { border-color: rgba(245, 201, 130, .09); }
-html.darkroom .records-table tr:hover { background: #1c1b20; }
-html.darkroom .space-footer {
-  background: #16161b;
-  border-color: rgba(245, 201, 130, .12);
-}
-html.darkroom .editor-dialog,
-html.darkroom .fields-dialog,
-html.darkroom dialog {
-  background: #141419;
-  border-color: rgba(245, 201, 130, .2);
-}
-html.darkroom .form-field input,
-html.darkroom .form-field textarea,
-html.darkroom .form-select,
-html.darkroom .custom-field > input {
-  background: #0e0e12;
-  border-color: rgba(245, 201, 130, .2);
-  color: #f2ede4;
-}
+html.glass.dark .mobile-user-popover { background: rgba(22, 24, 32, .88); }
