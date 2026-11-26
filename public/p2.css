@@ -735,6 +735,103 @@ dialog.cmd-dialog {
   .cards-panel .table-toolbar,
   .booking-stats-panel .table-toolbar { margin-top: 0 !important; min-height: 0; padding: 0 0 10px; }
 
+  /* 手机端高密度预约统计卡片（双列紧凑布局） */
+  .people-grid.booking-people-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    padding-bottom: 10px;
+  }
+  .person-card.booking-person-card {
+    padding: 11px 11px 10px;
+    border-radius: var(--r-card);
+  }
+  .booking-rank-medal { top: 6px; right: 7px; font-size: 20px; }
+  .booking-person-head { gap: 8px; padding-right: 22px; }
+  .booking-person-avatar .avatar.large { width: 34px; height: 34px; font-size: 14px; }
+  .booking-avatar-crown { top: -10px; left: calc(50% + 5px); font-size: 14px; }
+  .booking-person-head h2 {
+    margin: 0 0 2px;
+    font-size: 14px;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .booking-person-head p {
+    font-size: 10.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .booking-person-stats { margin-top: 9px; padding-top: 8px; gap: 6px; }
+  .booking-person-stats span { font-size: 10.5px; }
+  .booking-person-stats strong { margin-top: 1px; font-size: 18px; }
+  .booking-person-stats small { margin-left: 2px; font-size: 10.5px; }
+
+  /* 手机端高密度影棚状态卡片（双列紧凑布局，收紧留白） */
+  .room-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    padding-bottom: 10px;
+  }
+  .space-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--r-card);
+  }
+  .space-card-head { padding: 10px 10px 0; gap: 4px; }
+  .space-code { font-size: 9.5px; letter-spacing: .3px; }
+  .space-card-head .status { font-size: 10px; padding: 2px 6px; gap: 4px; }
+  .space-card-head .icon-button { width: 22px; height: 22px; }
+  .space-name { padding: 6px 10px 4px; gap: 0; }
+  .space-icon { display: none; }
+  .space-name > div { min-width: 0; flex: 1; }
+  .space-name h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 1px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .space-name div > span {
+    display: block;
+    font-size: 10.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .space-details { padding: 0 10px; gap: 6px; font-size: 10.5px; flex-wrap: nowrap; overflow: hidden; }
+  .space-details span { min-width: 0; gap: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .space-details svg { width: 11px; height: 11px; }
+  .space-equipment {
+    margin: 5px 10px 0;
+    font-size: 11px;
+    line-height: 1.4;
+    min-height: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .space-note { display: none; }
+  .space-session { margin: 7px 10px 0; padding: 7px 0 5px; gap: 4px; }
+  .recent-person, .session-time { gap: 6px; }
+  .recent-person > span, .session-time > span { font-size: 10.5px; }
+  .recent-person > span.person-cell { gap: 5px; font-size: 11px; }
+  .recent-person .avatar.small { width: 18px; height: 18px; font-size: 9.5px; }
+  .recent-person strong { font-size: 11px; }
+  .session-time strong { font-size: 11.5px; }
+  .next-booking { margin: 0 10px 7px; font-size: 10.5px; line-height: 1.35; min-height: 0; gap: 4px; }
+  .next-booking svg { width: 11px; height: 11px; }
+  .next-booking span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .space-card .custom-details { margin: 4px 10px 6px; gap: 4px; font-size: 10.5px; }
+  .space-footer { margin-top: auto; padding: 6px 10px; gap: 4px; }
+  .space-footer .text-button { font-size: 11.5px; gap: 3px; }
+  .space-footer .room-block-button { font-size: 10.5px; padding: 3px 4px; gap: 3px; }
+  .space-footer .icon-button { width: 24px; height: 24px; }
+
   /* 手机端排期时间轴（21天，左列吸顶 + 缩写影棚名） */
   .tl-toolbar { padding: 10px 12px; gap: 8px; }
   .tl-range { font-size: 12.5px; min-width: 0; }
