@@ -37,6 +37,26 @@
 .custom-field > input, .appearance-trigger, .appearance-choice,
 .status-filters button, .icon-button, .nav-button { border-radius: var(--r-ctrl); }
 
+/* 普通皮肤：经典贴边通栏侧栏（类似 Finder / Easy-Pi，无悬浮、无圆角、无阴影） */
+html:not(.glass) [data-slot=sidebar] {
+  width: var(--sidebar-width);
+}
+html:not(.glass) [data-slot=sidebar-container],
+html.dark:not(.glass) [data-slot=sidebar-container] {
+  inset: 0 auto 0 0;
+  border: 0;
+  border-right: 1px solid var(--sidebar-border);
+  border-radius: 0;
+  background-color: var(--sidebar);
+  background-image: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html:not(.glass) [data-slot=sidebar-menu] .nav-button {
+  border-radius: var(--r-ctrl);
+}
+
 /* 在忙状态：暖钨丝 Tally 呼吸光点 */
 .status.busy {
   color: var(--tungsten);
