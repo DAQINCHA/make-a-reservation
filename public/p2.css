@@ -797,7 +797,12 @@ dialog.cmd-dialog {
   }
 }
 
-/* ==================== 毛玻璃皮肤：iOS 26/27 水晶液态高透玻璃 ==================== */
+/* ==================== 毛玻璃皮肤：三层统一液态玻璃体系 ====================
+   Tier 1 悬浮导航玻璃：顶栏、手机胶囊、侧边栏（最清透，透出流动光影与底层内容）
+   Tier 2 内容承托玻璃：统计卡、影棚卡、人员卡、排期时间轴、表格容器、登录卡（全站同一基准，消除割裂）
+   Tier 3 浮层焦点玻璃：下拉菜单、弹窗、轻提示（略厚保可读，仍具通透呼吸感） */
+
+/* --- Tier 1A: 悬浮顶栏 & 手机底栏胶囊（水晶高透） --- */
 html.glass .topbar {
   position: sticky;
   top: 10px;
@@ -884,52 +889,172 @@ html.glass.dark .mobile-dock button[data-active=true] {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .26);
 }
 
-/* 表格视图可读性强化（桌面端容器 + 手机端每行独立卡片底色） */
-html.glass .records-panel [data-slot=table-container] { background: rgba(255, 255, 255, .78); }
-html.glass.dark .records-panel [data-slot=table-container] { background: rgba(24, 26, 38, .78); }
-
-@media (max-width: 600px) {
-  .records-panel .records-table tbody tr {
-    background: var(--card);
-    border-color: var(--border);
-    box-shadow: 0 2px 10px rgba(24, 20, 56, .05);
-  }
-  html.glass .records-panel .records-table tbody tr {
-    background: rgba(255, 255, 255, .86);
-    border-color: rgba(255, 255, 255, .90);
-    box-shadow: 0 6px 18px rgba(28, 24, 68, .08), inset 0 1px 0 rgba(255, 255, 255, .95);
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-  }
-  html.glass.dark .records-panel .records-table tbody tr {
-    background: rgba(22, 24, 34, .86);
-    border-color: rgba(255, 255, 255, .14);
-    box-shadow: 0 8px 22px rgba(0, 0, 0, .44), inset 0 1px 0 rgba(255, 255, 255, .08);
-    backdrop-filter: blur(16px) saturate(160%);
-    -webkit-backdrop-filter: blur(16px) saturate(160%);
-  }
+/* --- Tier 1B: 桌面端悬浮侧栏（与顶栏同源高透玻璃） --- */
+html.glass [data-slot=sidebar-container] {
+  background-color: transparent;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, .34), rgba(244, 246, 255, .18));
+  border-color: rgba(255, 255, 255, .72);
+  box-shadow:
+    0 18px 44px rgba(28, 24, 64, .12),
+    0 3px 10px rgba(28, 24, 64, .05),
+    inset 0 1.5px 0 rgba(255, 255, 255, .94),
+    inset -1px 0 0 rgba(255, 255, 255, .42);
+  backdrop-filter: blur(18px) saturate(210%);
+  -webkit-backdrop-filter: blur(18px) saturate(210%);
+}
+html.glass.dark [data-slot=sidebar-container] {
+  background-color: transparent;
+  background-image: linear-gradient(180deg, rgba(38, 40, 58, .32), rgba(14, 16, 26, .22));
+  border-color: rgba(255, 255, 255, .16);
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, .50),
+    inset 0 1px 0 rgba(255, 255, 255, .18);
+  backdrop-filter: blur(18px) saturate(200%);
+  -webkit-backdrop-filter: blur(18px) saturate(200%);
 }
 
+/* --- Tier 2: 内容卡片与主面板（全站统一通透度，告别各唱各调） --- */
+html.glass .stat-card,
+html.glass .space-card,
+html.glass .person-card,
 html.glass .tl-panel,
-html.glass .mobile-user-popover {
-  border-color: rgba(255, 255, 255, .64);
-  background: rgba(255, 255, 255, .58);
-  box-shadow: 0 10px 28px rgba(31, 38, 80, .09), inset 0 1px 0 rgba(255, 255, 255, .8);
-  backdrop-filter: blur(22px) saturate(180%);
-  -webkit-backdrop-filter: blur(22px) saturate(180%);
+html.glass .records-panel [data-slot=table-container],
+html.glass .login-panel {
+  border-color: rgba(255, 255, 255, .68);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .42), rgba(248, 249, 255, .26));
+  box-shadow:
+    0 10px 28px rgba(28, 24, 68, .08),
+    inset 0 1px 0 rgba(255, 255, 255, .88),
+    inset 0 -1px 0 rgba(255, 255, 255, .24);
+  backdrop-filter: blur(16px) saturate(200%);
+  -webkit-backdrop-filter: blur(16px) saturate(200%);
 }
-html.glass .tl-room-cell { background: rgba(249, 249, 254, .92); }
-html.glass .tl-header,
-html.glass .tl-corner { background: rgba(244, 244, 252, .9); }
-html.glass .mobile-user-popover { background: rgba(252, 252, 255, .86); }
-
+html.glass.dark .stat-card,
+html.glass.dark .space-card,
+html.glass.dark .person-card,
 html.glass.dark .tl-panel,
-html.glass.dark .mobile-user-popover {
-  border-color: rgba(255, 255, 255, .1);
-  background: rgba(24, 26, 36, .58);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, .44), inset 0 1px 0 rgba(255, 255, 255, .06);
+html.glass.dark .records-panel [data-slot=table-container],
+html.glass.dark .login-panel {
+  border-color: rgba(255, 255, 255, .14);
+  background: linear-gradient(180deg, rgba(34, 37, 52, .42), rgba(18, 20, 30, .30));
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, .44),
+    inset 0 1px 0 rgba(255, 255, 255, .12);
+  backdrop-filter: blur(16px) saturate(190%);
+  -webkit-backdrop-filter: blur(16px) saturate(190%);
 }
-html.glass.dark .tl-room-cell { background: rgba(20, 22, 32, .94); }
+
+/* 卡片/时间轴内部子区与表头：去除实体色贴片，融入统一玻璃材质 */
+html.glass .space-footer {
+  background: rgba(255, 255, 255, .20);
+  border-top-color: rgba(38, 34, 72, .07);
+}
+html.glass.dark .space-footer {
+  background: rgba(255, 255, 255, .04);
+  border-top-color: rgba(255, 255, 255, .08);
+}
+html.glass .records-table th { background: rgba(255, 255, 255, .24); }
+html.glass.dark .records-table th { background: rgba(255, 255, 255, .05); }
+html.glass .tl-header,
+html.glass .tl-corner {
+  background: rgba(246, 248, 255, .64);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+html.glass .tl-room-cell {
+  background: rgba(248, 249, 255, .68);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
 html.glass.dark .tl-header,
-html.glass.dark .tl-corner { background: rgba(26, 28, 38, .92); }
-html.glass.dark .mobile-user-popover { background: rgba(22, 24, 32, .88); }
+html.glass.dark .tl-corner {
+  background: rgba(24, 26, 38, .70);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+html.glass.dark .tl-room-cell {
+  background: rgba(20, 22, 34, .72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* --- Tier 2B: 玻璃界面上的次级按钮与输入框 --- */
+html.glass .secondary-button,
+html.glass .toolbar-search {
+  background: rgba(255, 255, 255, .34);
+  border-color: rgba(255, 255, 255, .66);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .82);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+html.glass .secondary-button:hover,
+html.glass .toolbar-search:focus {
+  background: rgba(255, 255, 255, .54);
+  border-color: rgba(255, 255, 255, .86);
+}
+html.glass .status-filters button.active {
+  background: rgba(255, 255, 255, .44);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .74);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+html.glass.dark .secondary-button,
+html.glass.dark .toolbar-search {
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(255, 255, 255, .15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+}
+html.glass.dark .secondary-button:hover,
+html.glass.dark .toolbar-search:focus {
+  background: rgba(255, 255, 255, .14);
+  border-color: rgba(255, 255, 255, .24);
+}
+html.glass.dark .status-filters button.active {
+  background: rgba(255, 255, 255, .14);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .18);
+}
+html.glass .rc-box {
+  background: rgba(255, 255, 255, .36);
+  border-color: rgba(255, 255, 255, .64);
+}
+html.glass.dark .rc-box {
+  background: rgba(255, 255, 255, .06);
+  border-color: rgba(255, 255, 255, .14);
+}
+
+/* --- Tier 3: 弹出菜单、弹窗与轻提示（轻透浮层，高可读不糊眼） --- */
+html.glass .appearance-popover,
+html.glass .mobile-user-popover,
+html.glass dialog,
+html.glass dialog.touch-sheet {
+  border-color: rgba(255, 255, 255, .74);
+  background: linear-gradient(180deg, rgba(252, 252, 255, .76), rgba(244, 246, 255, .64));
+  box-shadow:
+    0 24px 56px rgba(24, 20, 60, .22),
+    inset 0 1.5px 0 rgba(255, 255, 255, .92);
+  backdrop-filter: blur(24px) saturate(210%);
+  -webkit-backdrop-filter: blur(24px) saturate(210%);
+}
+html.glass.dark .appearance-popover,
+html.glass.dark .mobile-user-popover,
+html.glass.dark dialog,
+html.glass.dark dialog.touch-sheet {
+  border-color: rgba(255, 255, 255, .16);
+  background: linear-gradient(180deg, rgba(30, 32, 46, .76), rgba(18, 20, 30, .68));
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, .58),
+    inset 0 1px 0 rgba(255, 255, 255, .16);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+}
+html.glass .toast {
+  background: rgba(239, 252, 243, .72);
+  border-color: rgba(255, 255, 255, .78);
+  backdrop-filter: blur(18px) saturate(190%);
+  -webkit-backdrop-filter: blur(18px) saturate(190%);
+}
+html.glass .toast.error { background: rgba(255, 241, 244, .74); }
+html.glass.dark .toast { background: rgba(29, 54, 38, .66); }
+html.glass.dark .toast.error { background: rgba(72, 32, 44, .68); }
