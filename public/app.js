@@ -643,10 +643,7 @@ function render() {
     <main class="main-shell">
       <header class="topbar">
         <div>
-          ${button('sidebar', `${icon('panel-left', 16)}<span class="crumb-trigger-label">工作台</span>`, '', '', 'data-slot="sidebar-trigger" aria-label="切换侧栏"')}
           <img class="mobile-brand" src="/icons/icon-source.svg?v=violet-glass" alt="" width="24" height="24">
-          <span class="crumb-home">工作台</span>
-          <span class="crumb-sep">${icon('chevron-right', 14)}</span>
           <strong>${title}</strong>
         </div>
         <div class="topbar-controls">
