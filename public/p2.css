@@ -721,21 +721,25 @@ dialog.cmd-dialog {
   .topbar .crumb-sep,
   .view-tabs,
   .panel-actions [data-action="fields"],
-  .booking-stats-panel .panel-top { display: none !important; }
+  .records-panel .panel-top:not(.has-mobile-actions),
+  .toolbar-search,
+  .table-toolbar .toolbar-right:not(:has(.selection-actions, .sort-hint)) { display: none !important; }
   .mobile-brand { display: block; width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0; }
   .mobile-user-control { display: block; }
   .home-hero { min-height: 178px; padding: 18px 16px 24px; }
-  .toolbar-search { width: 100%; }
   .page-content { padding-bottom: calc(92px + env(safe-area-inset-bottom)); }
+  .section-summary { margin-bottom: 10px; padding-bottom: 10px; }
   .section-summary .summary-create { min-height: 32px; padding: 5px 11px; font-size: 12px; }
+  .records-panel .panel-top.has-mobile-actions { min-height: 0; padding: 0 0 8px; justify-content: flex-end; }
+  .records-panel .table-toolbar,
+  .cards-panel .table-toolbar,
+  .booking-stats-panel .table-toolbar { margin-top: 0 !important; min-height: 0; padding: 0 0 10px; }
 
-  /* 手机端排期时间轴紧凑适配：缩写影棚名 + 7天满屏无横滚 + 14/21天左列吸顶 */
+  /* 手机端排期时间轴（21天，左列吸顶 + 缩写影棚名） */
   .tl-toolbar { padding: 10px 12px; gap: 8px; }
   .tl-range { font-size: 12.5px; min-width: 0; }
-  .tl-zoom button { height: 25px; padding: 0 7px; font-size: 11px; }
-  .tl-grid[data-days="7"] { min-width: 0; width: 100%; }
-  .tl-grid[data-days="14"] { min-width: 680px; }
-  .tl-grid[data-days="21"] { min-width: 1000px; }
+  .tl-grid,
+  .tl-grid[data-days="21"] { min-width: 980px; }
   .tl-row { grid-template-columns: 74px minmax(0, 1fr); }
   .tl-corner { padding: 8px 8px; font-size: 11px; }
   .tl-room-cell { padding: 8px 6px 8px 10px; gap: 2px; }

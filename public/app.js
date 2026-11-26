@@ -70,7 +70,7 @@ const state = {
   filterPerson: '',
   search: '',
   tlStart: addDays(dayKey(Date.now()), matchMedia('(max-width: 767px)').matches ? 0 : -2),
-  tlDays: matchMedia('(max-width: 767px)').matches ? 7 : 14,
+  tlDays: 21,
   selected: [],
   sort: null,
   sorting: false,
@@ -537,11 +537,6 @@ function timelineView(rows) {
         ${button('tl-shift:7', '', 'secondary-button compact', 'chevron-right', 'aria-label="下一周" title="下一周"')}
         <span class="tl-range">${shortDay(state.tlStart)} – ${shortDay(endIso)}</span>
       </div>
-      <div class="tl-zoom">
-        <button type="button" data-action="tl-zoom:7" data-active="${state.tlDays === 7}">7天</button>
-        <button type="button" data-action="tl-zoom:14" data-active="${state.tlDays === 14}">14天</button>
-        <button type="button" data-action="tl-zoom:21" data-active="${state.tlDays === 21}">21天</button>
-      </div>
     </div>
     <div class="tl-scroll" id="tl-scroll">
       <div class="tl-grid" data-days="${state.tlDays}">
@@ -685,7 +680,7 @@ function render() {
         ${state.home
           ? homeView()
           : `<section class="records-panel ${cards ? 'cards-panel' : ''} ${e === 'bookings' && cards ? 'booking-stats-panel' : ''}">
-              <div class="panel-top">
+              <div class="panel-top ${admin() && !(e === 'bookings' && cards) ? 'has-mobile-actions' : ''}">
                 <div>
                   <div role="tablist" class="view-tabs">
                     ${tabDefs.map(([v, ico]) =>
@@ -1735,11 +1730,7 @@ async function runAction(rawAction, triggerEl = null) {
         render();
         break;
       case 'tl-today':
-        state.tlStart = addDays(dayKey(Date.now()), state.tlDays <= 7 ? 0 : -2);
-        render();
-        break;
-      case 'tl-zoom':
-        state.tlDays = Number(id);
+        state.tlStart = addDays(dayKey(Date.now()), isMobile() ? 0 : -2);
         render();
         break;
       case 'sort':
